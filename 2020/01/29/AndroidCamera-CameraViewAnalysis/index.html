@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <!-- title -->
+
+
+    
+
+<!-- keywords -->
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="author" content="Yeungeek">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Yeungeek">
+    
+        <meta name="keywords" content="hexo,hexo-theme,hexo-blog,Android,yeungeek,Unity">
+    
+    <meta name="description" content="It's my Androad">
+    <meta name="description" content="在前面文章中已经介绍了如何使用 CameraView，这是 Google 官方提供的库，并有相关 demo，因为 Android 的碎片化太严重，官方也是考虑到这些，才提供了CameraView供大家学习和参考。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Camera-CameraView源码分析">
+<meta property="og:url" content="http://yeungeek.github.io/2020/01/29/AndroidCamera-CameraViewAnalysis/index.html">
+<meta property="og:site_name" content="Yeungeek">
+<meta property="og:description" content="在前面文章中已经介绍了如何使用 CameraView，这是 Google 官方提供的库，并有相关 demo，因为 Android 的碎片化太严重，官方也是考虑到这些，才提供了CameraView供大家学习和参考。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s2.ax1x.com/2020/02/08/1WWkn0.png">
+<meta property="og:image" content="https://s2.ax1x.com/2020/02/13/1OoPpD.png">
+<meta property="article:published_time" content="2020-01-29T07:54:31.000Z">
+<meta property="article:modified_time" content="2023-07-31T03:40:56.494Z">
+<meta property="article:author" content="Yeungeek">
+<meta property="article:tag" content="Camera">
+<meta property="article:tag" content="Camera2">
+<meta property="article:tag" content="SurfaceView">
+<meta property="article:tag" content="TextureView">
+<meta property="article:tag" content="CameraView">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s2.ax1x.com/2020/02/08/1WWkn0.png">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="icon" href="/assets/favicon.ico">
+    
+    <title>Android Camera-CameraView源码分析 · 技术沉思录</title>
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+    (function (w) {
+        'use strict'
+        // rel=preload support test
+        if (!w.loadCSS) {
+            w.loadCSS = function () {}
+        }
+        // define on the loadCSS obj
+        var rp = (loadCSS.relpreload = {})
+        // rel=preload feature support test
+        // runs once and returns a function for compat purposes
+        rp.support = (function () {
+            var ret
+            try {
+                ret = w.document.createElement('link').relList.supports('preload')
+            } catch (e) {
+                ret = false
+            }
+            return function () {
+                return ret
+            }
+        })()
+
+        // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+        // then change that media back to its intended value on load
+        rp.bindMediaToggle = function (link) {
+            // remember existing media attr for ultimate state, or default to 'all'
+            var finalMedia = link.media || 'all'
+
+            function enableStylesheet() {
+                link.media = finalMedia
+            }
+
+            // bind load handlers to enable media
+            if (link.addEventListener) {
+                link.addEventListener('load', enableStylesheet)
+            } else if (link.attachEvent) {
+                link.attachEvent('onload', enableStylesheet)
+            }
+
+            // Set rel and non-applicable media type to start an async request
+            // note: timeout allows this to happen async to let rendering continue in IE
+            setTimeout(function () {
+                link.rel = 'stylesheet'
+                link.media = 'only x'
+            })
+            // also enable media after 3 seconds,
+            // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+            setTimeout(enableStylesheet, 3000)
+        }
+
+        // loop through link elements in DOM
+        rp.poly = function () {
+            // double check this to prevent external calls from running
+            if (rp.support()) {
+                return
+            }
+            var links = w.document.getElementsByTagName('link')
+            for (var i = 0; i < links.length; i++) {
+                var link = links[i]
+                // qualify links to those with rel=preload and as=style attrs
+                if (
+                    link.rel === 'preload' &&
+                    link.getAttribute('as') === 'style' &&
+                    !link.getAttribute('data-loadcss')
+                ) {
+                    // prevent rerunning on link
+                    link.setAttribute('data-loadcss', true)
+                    // bind listeners to toggle media back
+                    rp.bindMediaToggle(link)
+                }
+            }
+        }
+
+        // if unsupported, run the polyfill
+        if (!rp.support()) {
+            // run once at least
+            rp.poly()
+
+            // rerun poly on an interval until onload
+            var run = w.setInterval(rp.poly, 500)
+            if (w.addEventListener) {
+                w.addEventListener('load', function () {
+                    rp.poly()
+                    w.clearInterval(run)
+                })
+            } else if (w.attachEvent) {
+                w.attachEvent('onload', function () {
+                    rp.poly()
+                    w.clearInterval(run)
+                })
+            }
+        }
+
+        // commonjs
+        if (typeof exports !== 'undefined') {
+            exports.loadCSS = loadCSS
+        } else {
+            w.loadCSS = loadCSS
+        }
+    })(typeof global !== 'undefined' ? global : this)
+</script>
+
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+</style>
+
+    <link rel="preload" href="/css/style.css?v=20211217" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/css/dark.css?v=20211217" as="style">
+    <link rel="stylesheet" href="/css/dark.css">
+    <link rel="stylesheet" href="/css/mobile.css?v=20211217" media="(max-width: 960px)">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" as="script">
+    <link rel="preload" href="/scripts/main.js?v=20211217" as="script">
+    <link rel="preload" href="/scripts/dark.js?v=20211217" as="script">
+    <link rel="preload" href="/font/Oswald-Regular.ttf" as="font" crossorigin>
+    <link rel="preload" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" as="font" crossorigin>
+    <!-- algolia -->
+    
+    <!-- 百度统计  -->
+    
+        <script>
+            var _hmt = _hmt || [];
+            (function () {
+                var hm = document.createElement("script");
+                hm.src = "https://hm.baidu.com/hm.js?75ae37defe17129870bc1ba88b527367";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+            })();
+        </script>
+    
+    <!-- Google tag (gtag.js) -->
+    
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-37469819-1"></script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-37469819-1');
+        </script>
+    
+
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="Yeungeek" type="application/atom+xml">
+</head>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ == undefined) {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js" />')
+        }
+    </script>
+    
+        <body class="post-body">
+    
+        <!-- header -->
+        <header class="header header-mobile">
+    <!-- top read progress line -->
+    <div class="header-element">
+        <div class="read-progress"></div>
+    </div>
+    <!-- sidebar menu button -->
+    <div class="header-element">
+        
+            <div class="header-sidebar-menu">
+        
+            
+                <div style="padding-left: 1px;">&#xe775;</div>
+            
+        </div>
+    </div>
+    <!-- header actions -->
+    <div class="header-actions">
+        <!-- theme mode switch button -->
+        <span class="header-theme-btn header-element">
+            <i class="fas fa-adjust"></i>
+        </span>
+        <!-- back to home page text -->
+        <span class="home-link header-element">
+            <a href=/>技术沉思录</a>
+        </span>
+    </div>
+    <!-- toggle banner for post layout -->
+    
+        
+            <div class="banner">
+        
+            <div class="blog-title header-element">
+                <a href="/">技术沉思录</a>
+            </div>
+            <div class="post-title header-element">
+                <a href="#" class="post-name">Android Camera-CameraView源码分析</a>
+            </div>
+        </div>
+    
+</header>
+
+        <!-- fixed footer -->
+        <footer class="footer-fixed">
+    <!-- back to top button -->
+    <div class="footer-fixed-element">
+        
+            <div class="back-top back-top-hidden">
+        
+        
+            <div>&#xe639;</div>
+        
+        </div>
+    </div>
+</footer>
+
+        <!-- wrapper -->
+        <div class="wrapper">
+            <div class="site-intro" style="
+
+
+
+
+
+
+
+    height:50vh;
+
+">
+    
+    <!-- 主页  -->
+    
+        
+    <!-- 404页  -->
+    
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(/intro/post-bg.jpg)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+                Android Camera-CameraView源码分析
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+                
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页 meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="Camera">Camera</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="Camera2">Camera2</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="SurfaceView">SurfaceView</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="TextureView">TextureView</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="CameraView">CameraView</a>
+    
+</div>
+
+                
+                <!-- 文章字数统计 -->
+                
+                    <div class="post-intro-read">
+                        <span>字数统计: <span class="post-count word-count">2.8k</span>阅读时长: <span class="post-count reading-time">14 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <!-- 撰写日期 -->
+                    <span class="iconfont-archer post-intro-calander">&#xe676;</span>
+                    <span class="post-intro-time">2020/01/29</span>
+                    <!-- busuanzi -->
+                    
+                        <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                            <span class="iconfont-archer post-intro-busuanzi">&#xe602;</span>
+                            <span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    
+                    <!-- 文章分享 -->
+                    <span class="share-wrapper">
+                        <span class="iconfont-archer share-icon">&#xe71d;</span>
+                        <span class="share-text">Share</span>
+                        <ul class="share-list">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+
+            <script>
+  // get user agent
+  function getBrowserVersions() {
+    var u = window.navigator.userAgent
+    return {
+      userAgent: u,
+      trident: u.indexOf('Trident') > -1, //IE内核
+      presto: u.indexOf('Presto') > -1, //opera内核
+      webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+      gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+      mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+      ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+      android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+      iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+      iPad: u.indexOf('iPad') > -1, //是否为iPad
+      webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+      weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+      uc: u.indexOf('UCBrowser') > -1, //是否为android下的UC浏览器
+    }
+  }
+  var browser = {
+    versions: getBrowserVersions(),
+  }
+  console.log('userAgent: ' + browser.versions.userAgent)
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded')
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document
+        .getElementsByClassName('intro-title')[0]
+        .classList.add('intro-fade-in')
+      document
+        .getElementsByClassName('intro-subtitle')[0]
+        .classList.add('intro-fade-in')
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in')
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb() {
+    if (browser.versions.uc) {
+      console.log('UCBrowser')
+      fontLoaded()
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular'],
+        },
+        loading: function () {
+          // 所有字体开始加载
+          // console.log('font loading');
+        },
+        active: function () {
+          // 所有字体已渲染
+          fontLoaded()
+        },
+        inactive: function () {
+          // 字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout')
+          fontLoaded()
+        },
+        timeout: 5000, // Set the timeout to two seconds
+      })
+    }
+  }
+
+  function asyncErr() {
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document,
+      t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0]
+    o.src = u
+    if (cb) {
+      o.addEventListener(
+        'load',
+        function (e) {
+          cb(null, e)
+        },
+        false
+      )
+    }
+    if (err) {
+      o.addEventListener(
+        'error',
+        function (e) {
+          err(null, e)
+        },
+        false
+      )
+    }
+    s.parentNode.insertBefore(o, s)
+  }
+
+  var asyncLoadWithFallBack = function (arr, success, reject) {
+    var currReject = function () {
+      reject()
+      arr.shift()
+      if (arr.length) async(arr[0], success, currReject)
+    }
+
+    async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack(
+    [
+      'https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js',
+      'https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js',
+      "/lib/webfontloader.min.js",
+    ],
+    asyncCb,
+    asyncErr
+  )
+</script>
+
+            <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+            <div class="container container-unloaded">
+                <main class="main post-page">
+    <article class="article-entry">
+        <p>在前面文章中已经介绍了如何使用 <a target="_blank" rel="noopener" href="https://github.com/google/cameraview">CameraView</a>，这是 Google 官方提供的库，并有相关 demo，因为 Android 的碎片化太严重，官方也是考虑到这些，才提供了<a target="_blank" rel="noopener" href="https://github.com/google/cameraview">CameraView</a>供大家学习和参考。     </p>
+<span id="more"></span>
+<h1 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h1><h2 id="源码结构"><a href="#源码结构" class="headerlink" title="源码结构"></a>源码结构</h2><p><a target="_blank" rel="noopener" href="https://imgchr.com/i/1WWkn0"><img src="https://s2.ax1x.com/2020/02/08/1WWkn0.png" alt="源码结构"></a><br>根据官方的说明： </p>
+<table>
+<thead>
+<tr>
+<th align="center">API Level</th>
+<th>Camera API</th>
+<th>Preview View</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">9-13</td>
+<td>Camera1</td>
+<td>SurfaceView</td>
+</tr>
+<tr>
+<td align="center">14-20</td>
+<td>Camera1</td>
+<td>TextureView</td>
+</tr>
+<tr>
+<td align="center">21-23</td>
+<td>Camera2</td>
+<td>TextureView</td>
+</tr>
+<tr>
+<td align="center">24</td>
+<td>Camera2</td>
+<td>SurfaceView</td>
+</tr>
+</tbody></table>
+<p>具体的实现都在<a target="_blank" rel="noopener" href="https://github.com/google/cameraview/blob/master/library/src/main/java/com/google/android/cameraview/CameraView.java">CameraView类</a>中。</p>
+<h2 id="类图"><a href="#类图" class="headerlink" title="类图"></a>类图</h2><p>源码中涉及到的主要类之间的关系，是从最新的源码中查看到(跟官网的表格不太一样，最新的源码sdk最低版本为14)：<br><img src="https://s2.ax1x.com/2020/02/13/1OoPpD.png" alt="CameraView"></p>
+<ul>
+<li>Camera 区分：Android5.0(21)以下使用 Camera1，以上使用 Camera2</li>
+<li>Preview View：Android6.0(23)以上使用SurfaceView(SurfaceView在Android7.0上增加了新特性(平移、旋转等))，这里应该是 Android7.0以上(&gt;23)使用SurfaceView，其他都使用TextureView，最新的源码sdk最低版本要求14。</li>
+</ul>
+<h2 id="CameraView"><a href="#CameraView" class="headerlink" title="CameraView"></a>CameraView</h2><p>CameraView使用非常简单，在 CameraView 使用那篇文章已经做过详细说明。 </p>
+<h3 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&lt;com.google.android.cameraview.CameraView</span><br><span class="line">    android:id=<span class="string">&quot;@+id/camera&quot;</span></span><br><span class="line">    android:layout_width=<span class="string">&quot;match_parent&quot;</span></span><br><span class="line">    android:layout_height=<span class="string">&quot;wrap_content&quot;</span></span><br><span class="line">    android:keepScreenOn=<span class="string">&quot;true&quot;</span></span><br><span class="line">    android:adjustViewBounds=<span class="string">&quot;true&quot;</span></span><br><span class="line">    app:autoFocus=<span class="string">&quot;true&quot;</span></span><br><span class="line">    app:aspectRatio=<span class="string">&quot;4:3&quot;</span></span><br><span class="line">    app:facing=<span class="string">&quot;back&quot;</span></span><br><span class="line">    app:flash=<span class="string">&quot;auto&quot;</span>/&gt;</span><br></pre></td></tr></table></figure>
+<p>直接看下<code>CameraView</code>的构造函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">CameraView</span><span class="params">(Context context, AttributeSet attrs, <span class="type">int</span> defStyleAttr)</span> &#123;</span><br><span class="line">   <span class="built_in">super</span>(context, attrs, defStyleAttr);</span><br><span class="line">   ...</span><br><span class="line">   <span class="comment">// Internal setup</span></span><br><span class="line">   <span class="comment">// 1.创建预览视图</span></span><br><span class="line">   <span class="keyword">final</span> <span class="type">PreviewImpl</span> <span class="variable">preview</span> <span class="operator">=</span> createPreviewImpl(context);</span><br><span class="line">   mCallbacks = <span class="keyword">new</span> <span class="title class_">CallbackBridge</span>();</span><br><span class="line">   <span class="comment">// 2.根据 Android SDK 版本选择不同的 Camera</span></span><br><span class="line">   <span class="keyword">if</span> (Build.VERSION.SDK_INT &lt; <span class="number">21</span>) &#123;</span><br><span class="line">      mImpl = <span class="keyword">new</span> <span class="title class_">Camera1</span>(mCallbacks, preview);</span><br><span class="line">   &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Build.VERSION.SDK_INT &lt; <span class="number">23</span>) &#123;</span><br><span class="line">      mImpl = <span class="keyword">new</span> <span class="title class_">Camera2</span>(mCallbacks, preview, context);</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      mImpl = <span class="keyword">new</span> <span class="title class_">Camera2Api23</span>(mCallbacks, preview, context);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// Attributes</span></span><br><span class="line">   <span class="comment">// 3. 读取自定义 View 属性, 设置相机摄像头位置、预览画面比例、对焦方式、闪光灯</span></span><br><span class="line">   <span class="type">TypedArray</span> <span class="variable">a</span> <span class="operator">=</span> context.obtainStyledAttributes(attrs, R.styleable.CameraView, defStyleAttr,</span><br><span class="line">            R.style.Widget_CameraView);</span><br><span class="line">   mAdjustViewBounds = a.getBoolean(R.styleable.CameraView_android_adjustViewBounds, <span class="literal">false</span>);</span><br><span class="line">   setFacing(a.getInt(R.styleable.CameraView_facing, FACING_BACK));</span><br><span class="line">   <span class="type">String</span> <span class="variable">aspectRatio</span> <span class="operator">=</span> a.getString(R.styleable.CameraView_aspectRatio);</span><br><span class="line">   <span class="keyword">if</span> (aspectRatio != <span class="literal">null</span>) &#123;</span><br><span class="line">      setAspectRatio(AspectRatio.parse(aspectRatio));</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      setAspectRatio(Constants.DEFAULT_ASPECT_RATIO);</span><br><span class="line">   &#125;</span><br><span class="line">   setAutoFocus(a.getBoolean(R.styleable.CameraView_autoFocus, <span class="literal">true</span>));</span><br><span class="line">   setFlash(a.getInt(R.styleable.CameraView_flash, Constants.FLASH_AUTO));</span><br><span class="line">   a.recycle();</span><br><span class="line">   <span class="comment">// Display orientation detector</span></span><br><span class="line">   <span class="comment">// 4. 增加旋转方向监听，设置相机的旋转方向</span></span><br><span class="line">   mDisplayOrientationDetector = <span class="keyword">new</span> <span class="title class_">DisplayOrientationDetector</span>(context) &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onDisplayOrientationChanged</span><span class="params">(<span class="type">int</span> displayOrientation)</span> &#123;</span><br><span class="line">            mImpl.setDisplayOrientation(displayOrientation);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>createPreviewImpl</code>实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> PreviewImpl <span class="title function_">createPreviewImpl</span><span class="params">(Context context)</span> &#123;</span><br><span class="line">   PreviewImpl preview;</span><br><span class="line">   <span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= <span class="number">23</span>) &#123;</span><br><span class="line">      preview = <span class="keyword">new</span> <span class="title class_">SurfaceViewPreview</span>(context, <span class="built_in">this</span>);</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      preview = <span class="keyword">new</span> <span class="title class_">TextureViewPreview</span>(context, <span class="built_in">this</span>);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> preview;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里主要代码角度看下CameraView版本选择策略，在最开始的已经说明。<br>Camera的选择：api &lt;21的，使用Camera1，&gt;&#x3D;21使用 Camera2，这里完全没有问题。<br>Camera Preview的选择，存在几个疑问，api &gt;&#x3D;23使用SurfaceView，不过api 24的时候使用SurfaceView才是官方推荐的。  </p>
+<blockquote>
+<p>Starting in platform version N, SurfaceView’s window position is updated synchronously with other View rendering. This means that translating and scaling a SurfaceView on screen will not cause rendering artifacts. Such artifacts may occur on previous versions of the platform when its window is positioned asynchronously.</p>
+</blockquote>
+<p>这里应该 api &gt;23使用SurfaceView，其他情况使用TextureView，因为在工程中 定义了<code>minSdkVersion = 14</code>，api 14-23使用TextureView，表格可以更新为：</p>
+<table>
+<thead>
+<tr>
+<th align="center">API Level</th>
+<th>Camera API</th>
+<th>Preview View</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">14-20</td>
+<td>Camera1</td>
+<td>TextureView</td>
+</tr>
+<tr>
+<td align="center">21-23</td>
+<td>Camera2</td>
+<td>TextureView</td>
+</tr>
+<tr>
+<td align="center">24</td>
+<td>Camera2</td>
+<td>SurfaceView</td>
+</tr>
+</tbody></table>
+<h3 id="Preview定义"><a href="#Preview定义" class="headerlink" title="Preview定义"></a>Preview定义</h3><p><code>PreviewImpl</code>封装了预览控件的操作方法，<code>SurfaceViewPreview</code>和<code>TextureViewPreview</code>分别对应<code>SurfaceView</code>和<code>TextureView</code>的<code>PreviewImpl</code>实现。  </p>
+<h4 id="SurfaceViewPreview"><a href="#SurfaceViewPreview" class="headerlink" title="SurfaceViewPreview"></a>SurfaceViewPreview</h4><p>实现很简单，直接加载有<code>SurfaceView</code>控件的布局，并封装了<code>SurfaceHolder</code>操作</p>
+<h4 id="TextureViewPreview"><a href="#TextureViewPreview" class="headerlink" title="TextureViewPreview"></a>TextureViewPreview</h4><p>直接加载有<code>TextureView</code>控件布局，并监听<code>TextureView.SurfaceTextureListener</code>。</p>
+<h3 id="Camera定义"><a href="#Camera定义" class="headerlink" title="Camera定义"></a>Camera定义</h3><p><code>CameraViewImpl</code>定义了相机的各种操作，<code>Camera1</code>、<code>Camera2</code>、<code>Camera2Api23</code>都是<code>CameraViewImpl</code>的具体实现。<br>看下它们的构造函数:<br><code>Camera1</code>   </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Camera1(Callback callback, PreviewImpl preview) &#123;</span><br><span class="line">   <span class="built_in">super</span>(callback, preview);</span><br><span class="line">   preview.setCallback(<span class="keyword">new</span> <span class="title class_">PreviewImpl</span>.Callback() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onSurfaceChanged</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (mCamera != <span class="literal">null</span>) &#123;</span><br><span class="line">               setUpPreview();</span><br><span class="line">               adjustCameraParameters();</span><br><span class="line">            &#125;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>增加了 Callback，当SurfaceChanged的时候，设置预览和 Camera 参数。<br><code>Camera2</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Camera2(Callback callback, PreviewImpl preview, Context context) &#123;</span><br><span class="line">   <span class="built_in">super</span>(callback, preview);</span><br><span class="line">   mCameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);</span><br><span class="line">   mPreview.setCallback(<span class="keyword">new</span> <span class="title class_">PreviewImpl</span>.Callback() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onSurfaceChanged</span><span class="params">()</span> &#123;</span><br><span class="line">            startCaptureSession();</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>1.初始化了<code>CameraManager</code><br>2.增加Callback，当SurfaceChanged的时候，对CaptureSession进行设置  </p>
+<p><code>Camera2Api23</code>继承了<code>Camera2</code>，重用了<code>Camera2</code>的构造。<br>Camera1和 Camera2的实现和使用流程，可以参考前面的几篇文章，接下来介绍<code>CameraView</code>的几个重要方法的实现。</p>
+<h3 id="start"><a href="#start" class="headerlink" title="start"></a>start</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">start</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (!mImpl.start()) &#123;</span><br><span class="line">      <span class="comment">//store the state ,and restore this state after fall back o Camera1</span></span><br><span class="line">      <span class="type">Parcelable</span> <span class="variable">state</span> <span class="operator">=</span> onSaveInstanceState();</span><br><span class="line">      <span class="comment">// Camera2 uses legacy hardware layer; fall back to Camera1</span></span><br><span class="line">      mImpl = <span class="keyword">new</span> <span class="title class_">Camera1</span>(mCallbacks, createPreviewImpl(getContext()));</span><br><span class="line">      onRestoreInstanceState(state);</span><br><span class="line">      mImpl.start();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>开启相机，首先判断是否可以开启，如果不能开启，默认会使用 Camera1。</p>
+<h4 id="Camera1-start"><a href="#Camera1-start" class="headerlink" title="Camera1.start"></a>Camera1.start</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="title function_">start</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="comment">//1. 选择摄像头</span></span><br><span class="line">   chooseCamera();</span><br><span class="line">   <span class="comment">//2. 打开摄像头</span></span><br><span class="line">   openCamera();</span><br><span class="line">   <span class="comment">//3. 设置预览</span></span><br><span class="line">   <span class="keyword">if</span> (mPreview.isReady()) &#123;</span><br><span class="line">      setUpPreview();</span><br><span class="line">   &#125;</span><br><span class="line">   mShowingPreview = <span class="literal">true</span>;</span><br><span class="line">   <span class="comment">//4. 开始预览</span></span><br><span class="line">   mCamera.startPreview();</span><br><span class="line">   <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>具体的流程，可以参考<a href="/2020/01/17/AndroidCamera-UsingCamera1/">Camera1使用</a>，这里介绍几个重要的方法。<br>1.<code>chooseCamera</code>会遍历所有摄像头，然后根据<code>CameraView</code>初始化时传入的值进行对比，默认是<code>FACING_BACK</code>后置摄像头。<br>2.<code>openCamera</code>方法，这里具体展开介绍下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">openCamera</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (mCamera != <span class="literal">null</span>) &#123;</span><br><span class="line">      releaseCamera();</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//1. 打开摄像头</span></span><br><span class="line">   mCamera = Camera.open(mCameraId);</span><br><span class="line">   mCameraParameters = mCamera.getParameters();</span><br><span class="line">   <span class="comment">// Supported preview sizes</span></span><br><span class="line">   mPreviewSizes.clear();</span><br><span class="line">   <span class="comment">//2. 获取所有支持的预览尺寸</span></span><br><span class="line">   <span class="keyword">for</span> (Camera.Size size : mCameraParameters.getSupportedPreviewSizes()) &#123;</span><br><span class="line">      Log.d(<span class="string">&quot;DEBUG&quot;</span>, <span class="string">&quot;###### SupportedPreviewSizes: width=&quot;</span> + size.width + <span class="string">&quot;, height=&quot;</span></span><br><span class="line">               + size.height);</span><br><span class="line">      mPreviewSizes.add(<span class="keyword">new</span> <span class="title class_">Size</span>(size.width, size.height));</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// Supported picture sizes;</span></span><br><span class="line">   mPictureSizes.clear();</span><br><span class="line">   <span class="comment">//3. 获取所有支持的拍照尺寸</span></span><br><span class="line">   <span class="keyword">for</span> (Camera.Size size : mCameraParameters.getSupportedPictureSizes()) &#123;</span><br><span class="line">      Log.d(<span class="string">&quot;DEBUG&quot;</span>, <span class="string">&quot;###### SupportedPictureSizes: width=&quot;</span> + size.width + <span class="string">&quot;, height=&quot;</span></span><br><span class="line">               + size.height);</span><br><span class="line">      mPictureSizes.add(<span class="keyword">new</span> <span class="title class_">Size</span>(size.width, size.height));</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// AspectRatio</span></span><br><span class="line">   <span class="keyword">if</span> (mAspectRatio == <span class="literal">null</span>) &#123;</span><br><span class="line">      mAspectRatio = Constants.DEFAULT_ASPECT_RATIO;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//4. 设置预览比例</span></span><br><span class="line">   adjustCameraParameters();</span><br><span class="line">   mCamera.setDisplayOrientation(calcDisplayOrientation(mDisplayOrientation));</span><br><span class="line">   mCallback.onCameraOpened();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>3.<code>setUpPreview</code>设置预览</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">setUpPreview</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (mPreview.getOutputClass() == SurfaceHolder.class) &#123;</span><br><span class="line">            mCamera.setPreviewDisplay(mPreview.getSurfaceHolder());</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            mCamera.setPreviewTexture((SurfaceTexture) mPreview.getSurfaceTexture());</span><br><span class="line">      &#125;</span><br><span class="line">   &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(e);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>根据mPreview类型的不同，使用<code>SurfaceView</code>预览或者<code>TextureView</code>预览。<br>4.<code>mCamera.startPreview()</code>开启预览</p>
+<h4 id="Camera2-start"><a href="#Camera2-start" class="headerlink" title="Camera2.start"></a>Camera2.start</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span> <span class="title function_">start</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="comment">//1. 选择摄像头，默认后置摄像头</span></span><br><span class="line">   <span class="keyword">if</span> (!chooseCameraIdByFacing()) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//2. 设置预览尺寸，预览尺寸比例，拍照尺寸，其他相关设置</span></span><br><span class="line">   collectCameraInfo();</span><br><span class="line">   <span class="comment">//3. 初始化 ImageReader，并设置回调</span></span><br><span class="line">   prepareImageReader();</span><br><span class="line">   <span class="comment">//4. 打开摄像头</span></span><br><span class="line">   startOpeningCamera();</span><br><span class="line">   <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>具体流程可以参考<a href="/2020/01/19/AndroidCamera-UsingCamera2/">Camera2使用</a>，这里只介绍重要方法说明。<br>1.<code>chooseCameraIdByFacing</code>遍历支持的摄像头列表，根据条件筛选获取到指定的摄像头，默认后置摄像头。<br>2.<code>collectCameraInfo</code>方法，获取所有支持预览尺寸，和拍照尺寸，并获取支持的预览尺寸比例<br>3.<code>prepareImageReader</code>方法，初始化ImageReader  </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">prepareImageReader</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (mImageReader != <span class="literal">null</span>) &#123;</span><br><span class="line">      mImageReader.close();</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="type">Size</span> <span class="variable">largest</span> <span class="operator">=</span> mPictureSizes.sizes(mAspectRatio).last();</span><br><span class="line">   mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),</span><br><span class="line">            ImageFormat.JPEG, <span class="comment">/* maxImages */</span> <span class="number">2</span>);</span><br><span class="line">   mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, <span class="literal">null</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>设置输出格式为 JPEG，并增加<code>ImageAvailableListener</code>回调监听。<br>4.<code>startOpeningCamera</code>方法，打开摄像头，并设置<code>CameraDevice.StateCallback</code>监听  </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">startOpeningCamera</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">      mCameraManager.openCamera(mCameraId, mCameraDeviceCallback, <span class="literal">null</span>);</span><br><span class="line">   &#125; <span class="keyword">catch</span> (CameraAccessException e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;Failed to open camera: &quot;</span> + mCameraId, e);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> CameraDevice.<span class="type">StateCallback</span> <span class="variable">mCameraDeviceCallback</span></span><br><span class="line">      <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CameraDevice</span>.StateCallback() &#123;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onOpened</span><span class="params">(<span class="meta">@NonNull</span> CameraDevice camera)</span> &#123;</span><br><span class="line">      mCamera = camera;</span><br><span class="line">      mCallback.onCameraOpened();</span><br><span class="line">      <span class="comment">//相机打开，开启预览画面</span></span><br><span class="line">      startCaptureSession();</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onClosed</span><span class="params">(<span class="meta">@NonNull</span> CameraDevice camera)</span> &#123;</span><br><span class="line">      mCallback.onCameraClosed();</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onDisconnected</span><span class="params">(<span class="meta">@NonNull</span> CameraDevice camera)</span> &#123;</span><br><span class="line">      mCamera = <span class="literal">null</span>;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onError</span><span class="params">(<span class="meta">@NonNull</span> CameraDevice camera, <span class="type">int</span> error)</span> &#123;</span><br><span class="line">      Log.e(TAG, <span class="string">&quot;onError: &quot;</span> + camera.getId() + <span class="string">&quot; (&quot;</span> + error + <span class="string">&quot;)&quot;</span>);</span><br><span class="line">      mCamera = <span class="literal">null</span>;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>监听相机打开后，开启预览画面，<code>startCaptureSession</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">startCaptureSession</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (!isCameraOpened() || !mPreview.isReady() || mImageReader == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//1. 选择最合适的预览尺寸</span></span><br><span class="line">   <span class="type">Size</span> <span class="variable">previewSize</span> <span class="operator">=</span> chooseOptimalSize();</span><br><span class="line">   mPreview.setBufferSize(previewSize.getWidth(), previewSize.getHeight());</span><br><span class="line">   <span class="type">Surface</span> <span class="variable">surface</span> <span class="operator">=</span> mPreview.getSurface();</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">//2. 创建预览请求</span></span><br><span class="line">      mPreviewRequestBuilder = mCamera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);</span><br><span class="line">      <span class="comment">//3. 请求管理 target surface</span></span><br><span class="line">      mPreviewRequestBuilder.addTarget(surface);</span><br><span class="line">      <span class="comment">//4. 创建CaptureSession，并增加Session监听</span></span><br><span class="line">      mCamera.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),</span><br><span class="line">               mSessionCallback, <span class="literal">null</span>);</span><br><span class="line">   &#125; <span class="keyword">catch</span> (CameraAccessException e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;Failed to start camera session&quot;</span>);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>监听<code>CameraCaptureSession</code>状态的回调声明：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> CameraCaptureSession.<span class="type">StateCallback</span> <span class="variable">mSessionCallback</span></span><br><span class="line">      <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CameraCaptureSession</span>.StateCallback() &#123;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onConfigured</span><span class="params">(<span class="meta">@NonNull</span> CameraCaptureSession session)</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (mCamera == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      mCaptureSession = session;</span><br><span class="line">      updateAutoFocus();</span><br><span class="line">      updateFlash();</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">         <span class="comment">//1. 开启预览，并设置监听回调</span></span><br><span class="line">            mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(),</span><br><span class="line">                  mCaptureCallback, <span class="literal">null</span>);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (CameraAccessException e) &#123;</span><br><span class="line">            Log.e(TAG, <span class="string">&quot;Failed to start camera preview because it couldn&#x27;t access camera&quot;</span>, e);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (IllegalStateException e) &#123;</span><br><span class="line">            Log.e(TAG, <span class="string">&quot;Failed to start camera preview.&quot;</span>, e);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onConfigureFailed</span><span class="params">(<span class="meta">@NonNull</span> CameraCaptureSession session)</span> &#123;</span><br><span class="line">      Log.e(TAG, <span class="string">&quot;Failed to configure capture session.&quot;</span>);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onClosed</span><span class="params">(<span class="meta">@NonNull</span> CameraCaptureSession session)</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (mCaptureSession != <span class="literal">null</span> &amp;&amp; mCaptureSession.equals(session)) &#123;</span><br><span class="line">            mCaptureSession = <span class="literal">null</span>;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="takePicture"><a href="#takePicture" class="headerlink" title="takePicture"></a>takePicture</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">takePicture</span><span class="params">()</span> &#123;</span><br><span class="line">   mImpl.takePicture();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>根据 api 选择不同的实现</p>
+<h4 id="Camera1-takePicture"><a href="#Camera1-takePicture" class="headerlink" title="Camera1.takePicture"></a>Camera1.takePicture</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">takePicture</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (!isCameraOpened()) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">               <span class="string">&quot;Camera is not ready. Call start() before takePicture().&quot;</span>);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//1. 判断是否自动对焦</span></span><br><span class="line">   <span class="keyword">if</span> (getAutoFocus()) &#123;</span><br><span class="line">      mCamera.cancelAutoFocus();</span><br><span class="line">      mCamera.autoFocus(<span class="keyword">new</span> <span class="title class_">Camera</span>.AutoFocusCallback() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onAutoFocus</span><span class="params">(<span class="type">boolean</span> success, Camera camera)</span> &#123;</span><br><span class="line">               <span class="comment">//2. 拍照</span></span><br><span class="line">               takePictureInternal();</span><br><span class="line">            &#125;</span><br><span class="line">      &#125;);</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">//2.拍照</span></span><br><span class="line">      takePictureInternal();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>真正执行拍照的方法<code>takePictureInternal</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">takePictureInternal</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (!isPictureCaptureInProgress.getAndSet(<span class="literal">true</span>)) &#123;</span><br><span class="line">      <span class="comment">//1. 拍照增加回调</span></span><br><span class="line">      mCamera.takePicture(<span class="literal">null</span>, <span class="literal">null</span>, <span class="literal">null</span>, <span class="keyword">new</span> <span class="title class_">Camera</span>.PictureCallback() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onPictureTaken</span><span class="params">(<span class="type">byte</span>[] data, Camera camera)</span> &#123;</span><br><span class="line">               isPictureCaptureInProgress.set(<span class="literal">false</span>);</span><br><span class="line">               <span class="comment">//2. 把 data 传到上层的回调</span></span><br><span class="line">               mCallback.onPictureTaken(data);</span><br><span class="line">               camera.cancelAutoFocus();</span><br><span class="line">               camera.startPreview();</span><br><span class="line">            &#125;</span><br><span class="line">      &#125;);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>takePicture</code>中增加的 jpeg 的<code>PictureCallback</code>回调，返回的data通过callback回调到上层</p>
+<h4 id="Camera2-takePicture"><a href="#Camera2-takePicture" class="headerlink" title="Camera2.takePicture"></a>Camera2.takePicture</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">takePicture</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="comment">//1.判断自动对焦</span></span><br><span class="line">   <span class="keyword">if</span> (mAutoFocus) &#123;</span><br><span class="line">      lockFocus();</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">//2. 拍照请求</span></span><br><span class="line">      captureStillPicture();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//设置对焦</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">lockFocus</span><span class="params">()</span> &#123;</span><br><span class="line">   mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,</span><br><span class="line">            CaptureRequest.CONTROL_AF_TRIGGER_START);</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">      mCaptureCallback.setState(PictureCaptureCallback.STATE_LOCKING);</span><br><span class="line">      mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback, <span class="literal">null</span>);</span><br><span class="line">   &#125; <span class="keyword">catch</span> (CameraAccessException e) &#123;</span><br><span class="line">      Log.e(TAG, <span class="string">&quot;Failed to lock focus.&quot;</span>, e);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//PictureCaptureCallback</span></span><br><span class="line"><span class="type">PictureCaptureCallback</span> <span class="variable">mCaptureCallback</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PictureCaptureCallback</span>() &#123;</span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onPrecaptureRequired</span><span class="params">()</span> &#123;</span><br><span class="line">      mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,</span><br><span class="line">               CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START);</span><br><span class="line">      setState(STATE_PRECAPTURE);</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">            mCaptureSession.capture(mPreviewRequestBuilder.build(), <span class="built_in">this</span>, <span class="literal">null</span>);</span><br><span class="line">            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,</span><br><span class="line">                  CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_IDLE);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (CameraAccessException e) &#123;</span><br><span class="line">            Log.e(TAG, <span class="string">&quot;Failed to run precapture sequence.&quot;</span>, e);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onReady</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="comment">//2. 拍照请求</span></span><br><span class="line">      captureStillPicture();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>判断是否自动对焦，最后调用<code>captureStillPicture</code>方法进行拍照请求：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">captureStillPicture</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">//1. 创建TEMPLATE_STILL_CAPTURE的Capture请求</span></span><br><span class="line">      CaptureRequest.<span class="type">Builder</span> <span class="variable">captureRequestBuilder</span> <span class="operator">=</span> mCamera.createCaptureRequest(</span><br><span class="line">               CameraDevice.TEMPLATE_STILL_CAPTURE);</span><br><span class="line">      <span class="comment">//2. 添加target</span></span><br><span class="line">      captureRequestBuilder.addTarget(mImageReader.getSurface());</span><br><span class="line">      <span class="comment">//3. 设置 AF mode</span></span><br><span class="line">      captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,</span><br><span class="line">               mPreviewRequestBuilder.get(CaptureRequest.CONTROL_AF_MODE));</span><br><span class="line">      <span class="comment">//4.flash模式设置</span></span><br><span class="line">      ...</span><br><span class="line">      <span class="comment">// Calculate JPEG orientation.</span></span><br><span class="line">      <span class="comment">//5. 计算拍照图片的方向</span></span><br><span class="line">      <span class="meta">@SuppressWarnings(&quot;ConstantConditions&quot;)</span></span><br><span class="line">      <span class="type">int</span> <span class="variable">sensorOrientation</span> <span class="operator">=</span> mCameraCharacteristics.get(</span><br><span class="line">               CameraCharacteristics.SENSOR_ORIENTATION);</span><br><span class="line">      captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION,</span><br><span class="line">               (sensorOrientation +</span><br><span class="line">                        mDisplayOrientation * (mFacing == Constants.FACING_FRONT ? <span class="number">1</span> : -<span class="number">1</span>) +</span><br><span class="line">                        <span class="number">360</span>) % <span class="number">360</span>);</span><br><span class="line">      <span class="comment">// Stop preview and capture a still picture.</span></span><br><span class="line">      <span class="comment">//6. 停止预览</span></span><br><span class="line">      mCaptureSession.stopRepeating();</span><br><span class="line">      <span class="comment">//7. 拍照</span></span><br><span class="line">      mCaptureSession.capture(captureRequestBuilder.build(),</span><br><span class="line">               <span class="keyword">new</span> <span class="title class_">CameraCaptureSession</span>.CaptureCallback() &#123;</span><br><span class="line">                  <span class="meta">@Override</span></span><br><span class="line">                  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onCaptureCompleted</span><span class="params">(<span class="meta">@NonNull</span> CameraCaptureSession session,</span></span><br><span class="line"><span class="params">                           <span class="meta">@NonNull</span> CaptureRequest request,</span></span><br><span class="line"><span class="params">                           <span class="meta">@NonNull</span> TotalCaptureResult result)</span> &#123;</span><br><span class="line">                        <span class="comment">//8. 取消对焦</span></span><br><span class="line">                        unlockFocus();</span><br><span class="line">                  &#125;</span><br><span class="line">               &#125;, <span class="literal">null</span>);</span><br><span class="line">   &#125; <span class="keyword">catch</span> (CameraAccessException e) &#123;</span><br><span class="line">      Log.e(TAG, <span class="string">&quot;Cannot capture a still picture.&quot;</span>, e);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//取消对焦，重新设置预览</span></span><br><span class="line"><span class="keyword">void</span> <span class="title function_">unlockFocus</span><span class="params">()</span> &#123;</span><br><span class="line">   mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,</span><br><span class="line">            CaptureRequest.CONTROL_AF_TRIGGER_CANCEL);</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">      mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback, <span class="literal">null</span>);</span><br><span class="line">      updateAutoFocus();</span><br><span class="line">      updateFlash();</span><br><span class="line">      mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,</span><br><span class="line">               CaptureRequest.CONTROL_AF_TRIGGER_IDLE);</span><br><span class="line">      mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), mCaptureCallback,</span><br><span class="line">               <span class="literal">null</span>);</span><br><span class="line">      mCaptureCallback.setState(PictureCaptureCallback.STATE_PREVIEW);</span><br><span class="line">   &#125; <span class="keyword">catch</span> (CameraAccessException e) &#123;</span><br><span class="line">      Log.e(TAG, <span class="string">&quot;Failed to restart camera preview.&quot;</span>, e);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>拍照后真正的数据回调，是在初始化 ImageReader 的<code>OnImageAvailableListener</code>中</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ImageReader.<span class="type">OnImageAvailableListener</span> <span class="variable">mOnImageAvailableListener</span></span><br><span class="line">            <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ImageReader</span>.OnImageAvailableListener() &#123;</span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onImageAvailable</span><span class="params">(ImageReader reader)</span> &#123;</span><br><span class="line">      <span class="keyword">try</span> (<span class="type">Image</span> <span class="variable">image</span> <span class="operator">=</span> reader.acquireNextImage()) &#123;</span><br><span class="line">            Image.Plane[] planes = image.getPlanes();</span><br><span class="line">            <span class="keyword">if</span> (planes.length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">               <span class="type">ByteBuffer</span> <span class="variable">buffer</span> <span class="operator">=</span> planes[<span class="number">0</span>].getBuffer();</span><br><span class="line">               <span class="type">byte</span>[] data = <span class="keyword">new</span> <span class="title class_">byte</span>[buffer.remaining()];</span><br><span class="line">               buffer.get(data);</span><br><span class="line">               <span class="comment">//1. 数据回调到上层</span></span><br><span class="line">               mCallback.onPictureTaken(data);</span><br><span class="line">            &#125;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="stop"><a href="#stop" class="headerlink" title="stop"></a>stop</h3><p>如果不用拍照，或者退出应用，调用 stop 方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">stop</span><span class="params">()</span> &#123;</span><br><span class="line">   mImpl.stop();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Camera1-stop"><a href="#Camera1-stop" class="headerlink" title="Camera1.stop"></a>Camera1.stop</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">stop</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (mCamera != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="comment">//1. 停止预览</span></span><br><span class="line">      mCamera.stopPreview();</span><br><span class="line">   &#125;</span><br><span class="line">   mShowingPreview = <span class="literal">false</span>;</span><br><span class="line">   <span class="comment">//2. 释放相机资源</span></span><br><span class="line">   releaseCamera();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//释放相机资源</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">releaseCamera</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (mCamera != <span class="literal">null</span>) &#123;</span><br><span class="line">      mCamera.release();</span><br><span class="line">      mCamera = <span class="literal">null</span>;</span><br><span class="line">      <span class="comment">//1. 回调上层</span></span><br><span class="line">      mCallback.onCameraClosed();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Camera2-stop"><a href="#Camera2-stop" class="headerlink" title="Camera2.stop"></a>Camera2.stop</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">stop</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="comment">//1. 关闭 session</span></span><br><span class="line">   <span class="keyword">if</span> (mCaptureSession != <span class="literal">null</span>) &#123;</span><br><span class="line">      mCaptureSession.close();</span><br><span class="line">      mCaptureSession = <span class="literal">null</span>;</span><br><span class="line">   &#125;</span><br><span class="line">   </span><br><span class="line">   <span class="comment">//2. 关闭 Camera</span></span><br><span class="line">   <span class="keyword">if</span> (mCamera != <span class="literal">null</span>) &#123;</span><br><span class="line">      mCamera.close();</span><br><span class="line">      mCamera = <span class="literal">null</span>;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//3. 关闭 ImageReader</span></span><br><span class="line">   <span class="keyword">if</span> (mImageReader != <span class="literal">null</span>) &#123;</span><br><span class="line">      mImageReader.close();</span><br><span class="line">      mImageReader = <span class="literal">null</span>;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>CameraView源码相关的分析就结束了，该库很好的封装了 Camera1和 Camera2的使用，本篇文章对其中的重点方法进行了分析，讲解了它的实现原理，希望对大家有所帮助。</p>
+<h1 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/0ac7234dcefc">Android相机开发——CameraView源码解析</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/f63f296a920b">Android Camera 编程从入门到精通</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/shanshui911587154/article/details/90290535">Android——谷歌cameraview详解</a></li>
+</ul>
+
+    </article>
+    <!-- license -->
+    
+        <div class="license-wrapper">
+            <p>原文作者：<a href="http://yeungeek.github.io">Yeungeek</a>
+            <p>原文链接：<a href="http://yeungeek.github.io/2020/01/29/AndroidCamera-CameraViewAnalysis/">http://yeungeek.github.io/2020/01/29/AndroidCamera-CameraViewAnalysis/</a>
+            <p>发表日期：<a href="http://yeungeek.github.io/2020/01/29/AndroidCamera-CameraViewAnalysis/">January 29th 2020, 3:54:31 pm</a>
+            <p>更新日期：<a href="http://yeungeek.github.io/2020/01/29/AndroidCamera-CameraViewAnalysis/">July 31st 2023, 11:40:56 am</a>
+            <p>版权声明：本文采用<a rel="license noopener" target="_blank" href="http://creativecommons.org/licenses/by-nc/4.0/">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可</p>
+        </div>
+    
+    <!-- paginator -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href="/2020/02/28/AndroidCamera-CameraXSource/" title="Android Camera-CameraX源码分析">
+                    <div class="nextTitle">Android Camera-CameraX源码分析</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href="/2020/01/24/AndroidCamera-Orientation/" title="Android Camera-相机尺寸、方向和图像数据">
+                    <div class="prevTitle">Android Camera-相机尺寸、方向和图像数据</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- comment -->
+    
+        <div class="post-comment">
+            <!-- 来必力 City 版安装代码 -->
+
+
+            
+
+            
+
+            
+
+            <!-- utteranc评论 -->
+
+
+            <!-- partial('_partial/comment/changyan') -->
+            <!--PC版-->
+
+
+            
+            
+
+            
+
+        </div>
+    
+    <!-- timeliness note -->
+    <!-- idea from: https://hexo.fluid-dev.com/posts/hexo-injector/#%E6%96%87%E7%AB%A0%E6%97%B6%E6%95%88%E6%80%A7%E6%8F%90%E7%A4%BA -->
+    
+    <!-- Mathjax -->
+    
+</main>
+
+                <!-- profile -->
+                
+            </div>
+            <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+        <div class="social">
+            
+    
+        
+            
+                <a href="mailto:yeungeek@gmail.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yeungeek" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                    
+                    <img class="profile-qr" src="/assets/wechat_qr.jpeg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="//weibo.com/springyounger" class="iconfont-archer weibo" target="_blank" title=weibo></a>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="//twitter.com/yeungeek" class="iconfont-archer twitter" target="_blank" title=twitter></a>
+            
+        
+    
+        
+    
+        
+            
+                <a href="//stackoverflow.com/users/943667/yeungeek" class="iconfont-archer stack-overflow" target="_blank" title=stack-overflow></a>
+            
+        
+    
+        
+            
+                <a href="//segmentfault.com/u/yeungeek" class="iconfont-archer segmentFault" target="_blank" title=segmentFault></a>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+
+        </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- website approve for Chinese user -->
+    
+    <!-- 不蒜子  -->
+    
+        <div class="busuanzi-container">
+            
+             
+                <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+            
+        </div>
+    	
+</footer>
+
+        </div>
+        <!-- toc -->
+        
+            <div class="toc-wrapper toc-wrapper-loding" style=
+
+
+
+
+
+
+
+    top:50vh;
+
+>
+                <div class="toc-catalog">
+                    <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+                </div>
+                <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-number">1.</span> <span class="toc-text">源码分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%BA%90%E7%A0%81%E7%BB%93%E6%9E%84"><span class="toc-number">1.1.</span> <span class="toc-text">源码结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B1%BB%E5%9B%BE"><span class="toc-number">1.2.</span> <span class="toc-text">类图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CameraView"><span class="toc-number">1.3.</span> <span class="toc-text">CameraView</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">1.3.1.</span> <span class="toc-text">初始化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Preview%E5%AE%9A%E4%B9%89"><span class="toc-number">1.3.2.</span> <span class="toc-text">Preview定义</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#SurfaceViewPreview"><span class="toc-number">1.3.2.1.</span> <span class="toc-text">SurfaceViewPreview</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#TextureViewPreview"><span class="toc-number">1.3.2.2.</span> <span class="toc-text">TextureViewPreview</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Camera%E5%AE%9A%E4%B9%89"><span class="toc-number">1.3.3.</span> <span class="toc-text">Camera定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#start"><span class="toc-number">1.3.4.</span> <span class="toc-text">start</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Camera1-start"><span class="toc-number">1.3.4.1.</span> <span class="toc-text">Camera1.start</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Camera2-start"><span class="toc-number">1.3.4.2.</span> <span class="toc-text">Camera2.start</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#takePicture"><span class="toc-number">1.3.5.</span> <span class="toc-text">takePicture</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Camera1-takePicture"><span class="toc-number">1.3.5.1.</span> <span class="toc-text">Camera1.takePicture</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Camera2-takePicture"><span class="toc-number">1.3.5.2.</span> <span class="toc-text">Camera2.takePicture</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#stop"><span class="toc-number">1.3.6.</span> <span class="toc-text">stop</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Camera1-stop"><span class="toc-number">1.3.6.1.</span> <span class="toc-text">Camera1.stop</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Camera2-stop"><span class="toc-number">1.3.6.2.</span> <span class="toc-text">Camera2.stop</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%82%E8%80%83%EF%BC%9A"><span class="toc-number">2.</span> <span class="toc-text">参考：</span></a></li></ol>
+            </div>
+        
+        <!-- sidebar -->
+        <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+        <div class="sidebar-panel-archives">
+    <!-- 在 ejs 中将 archive 按照时间排序 -->
+    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 18
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+        
+            
+            
+            <div class="archive-year"> 2020 </div>
+            <ul class="year-list">
+            
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/09</span>
+            <a class="archive-post-title" href="/2020/05/09/Android-Knowledge-System/">Android知识体系</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/28</span>
+            <a class="archive-post-title" href="/2020/02/28/AndroidCamera-CameraXSource/">Android Camera-CameraX源码分析</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/29</span>
+            <a class="archive-post-title" href="/2020/01/29/AndroidCamera-CameraViewAnalysis/">Android Camera-CameraView源码分析</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/24</span>
+            <a class="archive-post-title" href="/2020/01/24/AndroidCamera-Orientation/">Android Camera-相机尺寸、方向和图像数据</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span>
+            <a class="archive-post-title" href="/2020/01/21/AndroidCamera-UsingCameraView/">Android Camera-CameraView和CameraX使用</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/19</span>
+            <a class="archive-post-title" href="/2020/01/19/AndroidCamera-UsingCamera2/">Android Camera-Camera2使用</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/17</span>
+            <a class="archive-post-title" href="/2020/01/17/AndroidCamera-UsingCamera1/">Android Camera-Camera1使用</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/14</span>
+            <a class="archive-post-title" href="/2020/01/14/AndroidCamera-Basic/">Android Camera-基础知识篇</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/13</span>
+            <a class="archive-post-title" href="/2020/01/13/AndroidCamera-Series/">Android Camera-系列文章</a>
+        </li>
+    
+        
+            
+            
+                
+                </ul>
+            
+            <div class="archive-year"> 2019 </div>
+            <ul class="year-list">
+            
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/21</span>
+            <a class="archive-post-title" href="/2019/08/21/AndroidNDK-DeepUnderstandJNI/">Android NDK-深入理解JNI</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/25</span>
+            <a class="archive-post-title" href="/2019/07/25/Network-Retrofit/">Android网络编程-Retrofit源码角度分析Http</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/17</span>
+            <a class="archive-post-title" href="/2019/07/17/Network-OKHttp/">Android网络编程-OKHttp源码角度分析Http</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/15</span>
+            <a class="archive-post-title" href="/2019/07/15/Network-Cookie-Session-Token/">Android网络编程-Cookie，Session，Token</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/12</span>
+            <a class="archive-post-title" href="/2019/07/12/Network-Http/">Android网络编程-HTTP/HTTPS</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/26</span>
+            <a class="archive-post-title" href="/2019/06/26/Network-Socket/">Android网络编程-Socket</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/21</span>
+            <a class="archive-post-title" href="/2019/06/21/Network-TCP-IP/">Android网络编程-TCP/IP协议</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/14</span>
+            <a class="archive-post-title" href="/2019/06/14/Network-Basic/">Android网络编程-计算机网络基础</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span>
+            <a class="archive-post-title" href="/2019/06/13/Network-Series/">Android网络编程-系列文章</a>
+        </li>
+    
+    </div>
+</div>
+
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+        
+            <span class="sidebar-tag-name" data-tags="Camera">
+                <span class="iconfont-archer">&#xe606;</span>
+                Camera
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Camera2">
+                <span class="iconfont-archer">&#xe606;</span>
+                Camera2
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="CameraX">
+                <span class="iconfont-archer">&#xe606;</span>
+                CameraX
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Android">
+                <span class="iconfont-archer">&#xe606;</span>
+                Android
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="SurfaceView">
+                <span class="iconfont-archer">&#xe606;</span>
+                SurfaceView
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="TextureView">
+                <span class="iconfont-archer">&#xe606;</span>
+                TextureView
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="CameraView">
+                <span class="iconfont-archer">&#xe606;</span>
+                CameraView
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Orientation">
+                <span class="iconfont-archer">&#xe606;</span>
+                Orientation
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Network">
+                <span class="iconfont-archer">&#xe606;</span>
+                Network
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="JNI">
+                <span class="iconfont-archer">&#xe606;</span>
+                JNI
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="NDK">
+                <span class="iconfont-archer">&#xe606;</span>
+                NDK
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Session">
+                <span class="iconfont-archer">&#xe606;</span>
+                Session
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Cookie">
+                <span class="iconfont-archer">&#xe606;</span>
+                Cookie
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Token">
+                <span class="iconfont-archer">&#xe606;</span>
+                Token
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Http">
+                <span class="iconfont-archer">&#xe606;</span>
+                Http
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Https">
+                <span class="iconfont-archer">&#xe606;</span>
+                Https
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="OKHttp">
+                <span class="iconfont-archer">&#xe606;</span>
+                OKHttp
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Retrofit">
+                <span class="iconfont-archer">&#xe606;</span>
+                Retrofit
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Socket">
+                <span class="iconfont-archer">&#xe606;</span>
+                Socket
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="TCP">
+                <span class="iconfont-archer">&#xe606;</span>
+                TCP
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="UDP">
+                <span class="iconfont-archer">&#xe606;</span>
+                UDP
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="IP">
+                <span class="iconfont-archer">&#xe606;</span>
+                IP
+            </span>
+        
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+        缺失模块，请参考主题文档进行安装配置：https://github.com/fi3ework/hexo-theme-archer#%E5%AE%89%E8%A3%85%E4%B8%BB%E9%A2%98
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="Camera">
+            <span class="iconfont-archer">&#xe60a;</span>
+            Camera
+        </span>
+    
+        <span class="sidebar-category-name" data-categories="Android框架层">
+            <span class="iconfont-archer">&#xe60a;</span>
+            Android框架层
+        </span>
+    
+        <span class="sidebar-category-name" data-categories="Android应用层">
+            <span class="iconfont-archer">&#xe60a;</span>
+            Android应用层
+        </span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+
+    </div>
+</div>
+
+        <!-- site-meta -->
+        <script>
+    var siteMetaRoot = "/"
+    if (siteMetaRoot === "undefined") {
+        siteMetaRoot = '/'
+    }
+    var siteMeta = {
+        url: "http://yeungeek.github.io",
+        root: siteMetaRoot,
+        author: "Yeungeek"
+    }
+</script>
+
+        <!-- import experimental options here -->
+        <!-- Custom Font -->
+
+
+        <!-- main func -->
+        <script src="/scripts/main.js?v=20211217"></script>
+        <!-- dark mode -->
+        <script src="/scripts/dark.js?v=20211217"></script>
+        <!-- fancybox -->
+        <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" defer></script>
+        <!-- algolia -->
+        
+        <!-- busuanzi -->
+        
+            <script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+        
+        <!-- CNZZ -->
+        
+        <!-- async load share.js -->
+        
+            <script src="/scripts/share.js?v=20211217" async></script>
+        
+        <!-- mermaid -->
+        
+            <script src='https://cdn.jsdelivr.net/npm/mermaid@8.11.0/dist/mermaid.min.js'></script>
+            <script>
+                if (window.mermaid) {
+                    mermaid.initialize({theme: 'dark'});
+                }
+            </script>
+        
+    </body>
+</html>

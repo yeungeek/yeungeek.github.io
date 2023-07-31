@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <!-- title -->
+
+
+    
+
+<!-- keywords -->
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="author" content="Yeungeek">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Yeungeek">
+    
+        <meta name="keywords" content="hexo,hexo-theme,hexo-blog,Android,yeungeek,Unity">
+    
+    <meta name="description" content="It's my Androad">
+    <meta name="description" content="在前面一篇文章中，已经介绍了如何使用 CameraX，这篇文章就分析下 CameraX 主要流程的源码。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android Camera-CameraX源码分析">
+<meta property="og:url" content="http://yeungeek.github.io/2020/02/28/AndroidCamera-CameraXSource/index.html">
+<meta property="og:site_name" content="Yeungeek">
+<meta property="og:description" content="在前面一篇文章中，已经介绍了如何使用 CameraX，这篇文章就分析下 CameraX 主要流程的源码。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s1.ax1x.com/2020/04/13/GXwNU1.png">
+<meta property="og:image" content="https://s1.ax1x.com/2020/04/13/GXRjuq.png">
+<meta property="og:image" content="https://s1.ax1x.com/2020/04/13/GXLFRP.png">
+<meta property="og:image" content="https://s1.ax1x.com/2020/04/17/JZ52bd.png">
+<meta property="article:published_time" content="2020-02-28T13:35:11.000Z">
+<meta property="article:modified_time" content="2023-07-31T03:40:56.494Z">
+<meta property="article:author" content="Yeungeek">
+<meta property="article:tag" content="Camera2">
+<meta property="article:tag" content="CameraX">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s1.ax1x.com/2020/04/13/GXwNU1.png">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="icon" href="/assets/favicon.ico">
+    
+    <title>Android Camera-CameraX源码分析 · 技术沉思录</title>
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+    (function (w) {
+        'use strict'
+        // rel=preload support test
+        if (!w.loadCSS) {
+            w.loadCSS = function () {}
+        }
+        // define on the loadCSS obj
+        var rp = (loadCSS.relpreload = {})
+        // rel=preload feature support test
+        // runs once and returns a function for compat purposes
+        rp.support = (function () {
+            var ret
+            try {
+                ret = w.document.createElement('link').relList.supports('preload')
+            } catch (e) {
+                ret = false
+            }
+            return function () {
+                return ret
+            }
+        })()
+
+        // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+        // then change that media back to its intended value on load
+        rp.bindMediaToggle = function (link) {
+            // remember existing media attr for ultimate state, or default to 'all'
+            var finalMedia = link.media || 'all'
+
+            function enableStylesheet() {
+                link.media = finalMedia
+            }
+
+            // bind load handlers to enable media
+            if (link.addEventListener) {
+                link.addEventListener('load', enableStylesheet)
+            } else if (link.attachEvent) {
+                link.attachEvent('onload', enableStylesheet)
+            }
+
+            // Set rel and non-applicable media type to start an async request
+            // note: timeout allows this to happen async to let rendering continue in IE
+            setTimeout(function () {
+                link.rel = 'stylesheet'
+                link.media = 'only x'
+            })
+            // also enable media after 3 seconds,
+            // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+            setTimeout(enableStylesheet, 3000)
+        }
+
+        // loop through link elements in DOM
+        rp.poly = function () {
+            // double check this to prevent external calls from running
+            if (rp.support()) {
+                return
+            }
+            var links = w.document.getElementsByTagName('link')
+            for (var i = 0; i < links.length; i++) {
+                var link = links[i]
+                // qualify links to those with rel=preload and as=style attrs
+                if (
+                    link.rel === 'preload' &&
+                    link.getAttribute('as') === 'style' &&
+                    !link.getAttribute('data-loadcss')
+                ) {
+                    // prevent rerunning on link
+                    link.setAttribute('data-loadcss', true)
+                    // bind listeners to toggle media back
+                    rp.bindMediaToggle(link)
+                }
+            }
+        }
+
+        // if unsupported, run the polyfill
+        if (!rp.support()) {
+            // run once at least
+            rp.poly()
+
+            // rerun poly on an interval until onload
+            var run = w.setInterval(rp.poly, 500)
+            if (w.addEventListener) {
+                w.addEventListener('load', function () {
+                    rp.poly()
+                    w.clearInterval(run)
+                })
+            } else if (w.attachEvent) {
+                w.attachEvent('onload', function () {
+                    rp.poly()
+                    w.clearInterval(run)
+                })
+            }
+        }
+
+        // commonjs
+        if (typeof exports !== 'undefined') {
+            exports.loadCSS = loadCSS
+        } else {
+            w.loadCSS = loadCSS
+        }
+    })(typeof global !== 'undefined' ? global : this)
+</script>
+
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+</style>
+
+    <link rel="preload" href="/css/style.css?v=20211217" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/css/dark.css?v=20211217" as="style">
+    <link rel="stylesheet" href="/css/dark.css">
+    <link rel="stylesheet" href="/css/mobile.css?v=20211217" media="(max-width: 960px)">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" as="script">
+    <link rel="preload" href="/scripts/main.js?v=20211217" as="script">
+    <link rel="preload" href="/scripts/dark.js?v=20211217" as="script">
+    <link rel="preload" href="/font/Oswald-Regular.ttf" as="font" crossorigin>
+    <link rel="preload" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" as="font" crossorigin>
+    <!-- algolia -->
+    
+    <!-- 百度统计  -->
+    
+        <script>
+            var _hmt = _hmt || [];
+            (function () {
+                var hm = document.createElement("script");
+                hm.src = "https://hm.baidu.com/hm.js?75ae37defe17129870bc1ba88b527367";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+            })();
+        </script>
+    
+    <!-- Google tag (gtag.js) -->
+    
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-37469819-1"></script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-37469819-1');
+        </script>
+    
+
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="Yeungeek" type="application/atom+xml">
+</head>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ == undefined) {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js" />')
+        }
+    </script>
+    
+        <body class="post-body">
+    
+        <!-- header -->
+        <header class="header header-mobile">
+    <!-- top read progress line -->
+    <div class="header-element">
+        <div class="read-progress"></div>
+    </div>
+    <!-- sidebar menu button -->
+    <div class="header-element">
+        
+            <div class="header-sidebar-menu">
+        
+            
+                <div style="padding-left: 1px;">&#xe775;</div>
+            
+        </div>
+    </div>
+    <!-- header actions -->
+    <div class="header-actions">
+        <!-- theme mode switch button -->
+        <span class="header-theme-btn header-element">
+            <i class="fas fa-adjust"></i>
+        </span>
+        <!-- back to home page text -->
+        <span class="home-link header-element">
+            <a href=/>技术沉思录</a>
+        </span>
+    </div>
+    <!-- toggle banner for post layout -->
+    
+        
+            <div class="banner">
+        
+            <div class="blog-title header-element">
+                <a href="/">技术沉思录</a>
+            </div>
+            <div class="post-title header-element">
+                <a href="#" class="post-name">Android Camera-CameraX源码分析</a>
+            </div>
+        </div>
+    
+</header>
+
+        <!-- fixed footer -->
+        <footer class="footer-fixed">
+    <!-- back to top button -->
+    <div class="footer-fixed-element">
+        
+            <div class="back-top back-top-hidden">
+        
+        
+            <div>&#xe639;</div>
+        
+        </div>
+    </div>
+</footer>
+
+        <!-- wrapper -->
+        <div class="wrapper">
+            <div class="site-intro" style="
+
+
+
+
+
+
+
+    height:50vh;
+
+">
+    
+    <!-- 主页  -->
+    
+        
+    <!-- 404页  -->
+    
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(/intro/post-bg.jpg)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+                Android Camera-CameraX源码分析
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+                
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页 meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="Camera2">Camera2</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="CameraX">CameraX</a>
+    
+</div>
+
+                
+                <!-- 文章字数统计 -->
+                
+                    <div class="post-intro-read">
+                        <span>字数统计: <span class="post-count word-count">4.3k</span>阅读时长: <span class="post-count reading-time">22 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <!-- 撰写日期 -->
+                    <span class="iconfont-archer post-intro-calander">&#xe676;</span>
+                    <span class="post-intro-time">2020/02/28</span>
+                    <!-- busuanzi -->
+                    
+                        <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                            <span class="iconfont-archer post-intro-busuanzi">&#xe602;</span>
+                            <span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    
+                    <!-- 文章分享 -->
+                    <span class="share-wrapper">
+                        <span class="iconfont-archer share-icon">&#xe71d;</span>
+                        <span class="share-text">Share</span>
+                        <ul class="share-list">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+
+            <script>
+  // get user agent
+  function getBrowserVersions() {
+    var u = window.navigator.userAgent
+    return {
+      userAgent: u,
+      trident: u.indexOf('Trident') > -1, //IE内核
+      presto: u.indexOf('Presto') > -1, //opera内核
+      webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+      gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+      mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+      ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+      android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+      iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+      iPad: u.indexOf('iPad') > -1, //是否为iPad
+      webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+      weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+      uc: u.indexOf('UCBrowser') > -1, //是否为android下的UC浏览器
+    }
+  }
+  var browser = {
+    versions: getBrowserVersions(),
+  }
+  console.log('userAgent: ' + browser.versions.userAgent)
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded')
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document
+        .getElementsByClassName('intro-title')[0]
+        .classList.add('intro-fade-in')
+      document
+        .getElementsByClassName('intro-subtitle')[0]
+        .classList.add('intro-fade-in')
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in')
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb() {
+    if (browser.versions.uc) {
+      console.log('UCBrowser')
+      fontLoaded()
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular'],
+        },
+        loading: function () {
+          // 所有字体开始加载
+          // console.log('font loading');
+        },
+        active: function () {
+          // 所有字体已渲染
+          fontLoaded()
+        },
+        inactive: function () {
+          // 字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout')
+          fontLoaded()
+        },
+        timeout: 5000, // Set the timeout to two seconds
+      })
+    }
+  }
+
+  function asyncErr() {
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document,
+      t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0]
+    o.src = u
+    if (cb) {
+      o.addEventListener(
+        'load',
+        function (e) {
+          cb(null, e)
+        },
+        false
+      )
+    }
+    if (err) {
+      o.addEventListener(
+        'error',
+        function (e) {
+          err(null, e)
+        },
+        false
+      )
+    }
+    s.parentNode.insertBefore(o, s)
+  }
+
+  var asyncLoadWithFallBack = function (arr, success, reject) {
+    var currReject = function () {
+      reject()
+      arr.shift()
+      if (arr.length) async(arr[0], success, currReject)
+    }
+
+    async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack(
+    [
+      'https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js',
+      'https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js',
+      "/lib/webfontloader.min.js",
+    ],
+    asyncCb,
+    asyncErr
+  )
+</script>
+
+            <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+            <div class="container container-unloaded">
+                <main class="main post-page">
+    <article class="article-entry">
+        <p>在前面一篇文章中，已经介绍了如何使用 CameraX，这篇文章就分析下 CameraX 主要流程的源码。</p>
+<span id="more"></span>
+<p>本篇分析的源码版本是1.0.0-alpha06，目前最新的 CameraX 版本是<a target="_blank" rel="noopener" href="https://developer.android.com/jetpack/androidx/releases/camera">1.0.0-alpha10</a>。  </p>
+<h1 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h1><p>在 build.gradle 中声明</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> camerax_version = <span class="string">&quot;1.0.0-alpha06&quot;</span></span><br><span class="line">implementation <span class="string">&quot;androidx.camera:camera-core:$&#123;camerax_version&#125;&quot;</span></span><br><span class="line">implementation <span class="string">&quot;androidx.camera:camera-camera2:$&#123;camerax_version&#125;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> camerax_view_version = <span class="string">&quot;1.0.0-alpha03&quot;</span></span><br><span class="line"><span class="keyword">def</span> camerax_ext_version = <span class="string">&quot;1.0.0-alpha03&quot;</span></span><br><span class="line"><span class="comment">//other</span></span><br><span class="line"><span class="comment">// If you to use the Camera View class</span></span><br><span class="line">implementation <span class="string">&quot;androidx.camera:camera-view:$camerax_view_version&quot;</span></span><br><span class="line"><span class="comment">// If you to use Camera Extensions</span></span><br><span class="line">implementation <span class="string">&quot;androidx.camera:camera-extensions:$camerax_ext_version&quot;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>camera-core：Camera核心库，设计架构的实现</li>
+<li>camera-camera2：Camera2的配置和操作封装</li>
+<li>camera-view：自定义的 CameraView 组件</li>
+<li>camera-extensions：Camera的扩展，用于访问设备专属供应商效果（例如散景、HDR 及其他功能）的 API</li>
+</ul>
+<p>其中<code>camera-core</code>和<code>camera-camera2</code>是必须使用的库，使用该库，可以轻松地使用Camera2 API的功能</p>
+<h1 id="CameraX结构"><a href="#CameraX结构" class="headerlink" title="CameraX结构"></a>CameraX结构</h1><p>首先看下 CameraX 的属性：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">CameraX</span> <span class="variable">INSTANCE</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CameraX</span>();</span><br><span class="line"><span class="keyword">final</span> <span class="type">CameraRepository</span> <span class="variable">mCameraRepository</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CameraRepository</span>();</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="type">AtomicBoolean</span> <span class="variable">mInitialized</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicBoolean</span>(<span class="literal">false</span>);</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="type">UseCaseGroupRepository</span> <span class="variable">mUseCaseGroupRepository</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UseCaseGroupRepository</span>();</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="type">ErrorHandler</span> <span class="variable">mErrorHandler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ErrorHandler</span>();</span><br><span class="line"><span class="keyword">private</span> CameraFactory mCameraFactory;</span><br><span class="line"><span class="keyword">private</span> CameraDeviceSurfaceManager mSurfaceManager;</span><br><span class="line"><span class="keyword">private</span> UseCaseConfigFactory mDefaultConfigFactory;</span><br><span class="line"><span class="keyword">private</span> Context mContext;</span><br></pre></td></tr></table></figure>
+<p>主要看其中几个重要属性： </p>
+<ul>
+<li>CameraRepository：Camera仓库，保存可用 Camera 的列表</li>
+<li>UseCaseGroupRepository：UseCaseGroupLifecycleController实例仓库，每个UseCaseGroupLifecycleController都与一个LifecycleOwner相关联，该LifecycleOwner调节组中所有用例共享的通用生命周期</li>
+<li>CameraFactory：Camera抽象工厂，Camera2CameraFactory是具体的实现类</li>
+<li>CameraDeviceSurfaceManager：Camera设备与对应数据流管理，具体实现是Camera2DeviceSurfaceManager</li>
+<li>UseCaseConfigFactory：UseCase配置工厂</li>
+</ul>
+<p>CameraX主要使用<code>UseCase</code>的概念与相机设备进行交互，目前提供的<code>UseCase</code>：</p>
+<ul>
+<li>预览(Preview)</li>
+<li>图片拍摄(ImageCapture)</li>
+<li>图片分析(ImageAnalysis)</li>
+</ul>
+<h2 id="CameraX初始化"><a href="#CameraX初始化" class="headerlink" title="CameraX初始化"></a>CameraX初始化</h2><p><img src="https://s1.ax1x.com/2020/04/13/GXwNU1.png" alt="GXwNU1.png"></p>
+<h3 id="Camera2Initializer"><a href="#Camera2Initializer" class="headerlink" title="Camera2Initializer"></a>Camera2Initializer</h3><p>CameraX初始化方法：init</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">(Context context, <span class="meta">@NonNull</span> AppConfig appConfig)</span> &#123;</span><br><span class="line">   INSTANCE.initInternal(context, appConfig);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>init 是通过ContentProvier配置初始化，具体实现类<code>Camera2Initializer</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">Camera2Initializer</span> <span class="keyword">extends</span> <span class="title class_">ContentProvider</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">TAG</span> <span class="operator">=</span> <span class="string">&quot;Camera2Initializer&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">onCreate</span><span class="params">()</span> &#123;</span><br><span class="line">        Log.d(TAG, <span class="string">&quot;CameraX initializing with Camera2 ...&quot;</span>);</span><br><span class="line"></span><br><span class="line">        CameraX.init(getContext(), Camera2AppConfig.create(getContext()));</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在<code>AndroidMainifest.xml</code>会自动生成provider配置，ContentProvider的OnCreate调用比Applicantion的 onCreate调用更早。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">provider</span></span></span><br><span class="line"><span class="tag">   <span class="attr">android:name</span>=<span class="string">&quot;androidx.camera.camera2.impl.Camera2Initializer&quot;</span></span></span><br><span class="line"><span class="tag">   <span class="attr">android:exported</span>=<span class="string">&quot;false&quot;</span></span></span><br><span class="line"><span class="tag">   <span class="attr">android:multiprocess</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag">   <span class="attr">android:authorities</span>=<span class="string">&quot;$&#123;applicationId&#125;.camerax-init&quot;</span></span></span><br><span class="line"><span class="tag">   <span class="attr">android:initOrder</span>=<span class="string">&quot;100&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+<h3 id="Camera2AppConfig"><a href="#Camera2AppConfig" class="headerlink" title="Camera2AppConfig"></a>Camera2AppConfig</h3><p>init 方法传入的 AppConfig 的 create：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> AppConfig <span class="title function_">create</span><span class="params">(Context context)</span> &#123;</span><br><span class="line">   <span class="comment">// Create the camera factory for creating Camera2 camera objects</span></span><br><span class="line">   <span class="type">CameraFactory</span> <span class="variable">cameraFactory</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Camera2CameraFactory</span>(context);</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Create the DeviceSurfaceManager for Camera2</span></span><br><span class="line">   <span class="type">CameraDeviceSurfaceManager</span> <span class="variable">surfaceManager</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Camera2DeviceSurfaceManager</span>(context);</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Create default configuration factory</span></span><br><span class="line">   <span class="type">ExtendableUseCaseConfigFactory</span> <span class="variable">configFactory</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ExtendableUseCaseConfigFactory</span>();</span><br><span class="line">   configFactory.installDefaultProvider(</span><br><span class="line">            ImageAnalysisConfig.class, <span class="keyword">new</span> <span class="title class_">ImageAnalysisConfigProvider</span>(cameraFactory, context));</span><br><span class="line">   configFactory.installDefaultProvider(</span><br><span class="line">            ImageCaptureConfig.class, <span class="keyword">new</span> <span class="title class_">ImageCaptureConfigProvider</span>(cameraFactory, context));</span><br><span class="line">   configFactory.installDefaultProvider(</span><br><span class="line">            VideoCaptureConfig.class, <span class="keyword">new</span> <span class="title class_">VideoCaptureConfigProvider</span>(cameraFactory, context));</span><br><span class="line">   configFactory.installDefaultProvider(</span><br><span class="line">            PreviewConfig.class, <span class="keyword">new</span> <span class="title class_">PreviewConfigProvider</span>(cameraFactory, context));</span><br><span class="line"></span><br><span class="line">   AppConfig.<span class="type">Builder</span> <span class="variable">appConfigBuilder</span> <span class="operator">=</span></span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">AppConfig</span>.Builder()</span><br><span class="line">                  .setCameraFactory(cameraFactory)</span><br><span class="line">                  .setDeviceSurfaceManager(surfaceManager)</span><br><span class="line">                  .setUseCaseConfigFactory(configFactory);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">return</span> appConfigBuilder.build();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过 AppConfig.Builder 进行构建，CameraX中的默认属性都在这里初始化。后面具体讲到某个 UseCase 的时候，详细分析下具体的ConfigProvider</p>
+<h3 id="CameraX-initInternal"><a href="#CameraX-initInternal" class="headerlink" title="CameraX.initInternal"></a>CameraX.initInternal</h3><p>CameraX真正初始化方法：<code>initInternal</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">initInternal</span><span class="params">(Context context, AppConfig appConfig)</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (mInitialized.getAndSet(<span class="literal">true</span>)) &#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   mContext = context.getApplicationContext();</span><br><span class="line">   mCameraFactory = appConfig.getCameraFactory(<span class="literal">null</span>);</span><br><span class="line">   <span class="keyword">if</span> (mCameraFactory == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">               <span class="string">&quot;Invalid app configuration provided. Missing CameraFactory.&quot;</span>);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   mSurfaceManager = appConfig.getDeviceSurfaceManager(<span class="literal">null</span>);</span><br><span class="line">   <span class="keyword">if</span> (mSurfaceManager == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">               <span class="string">&quot;Invalid app configuration provided. Missing CameraDeviceSurfaceManager.&quot;</span>);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   mDefaultConfigFactory = appConfig.getUseCaseConfigRepository(<span class="literal">null</span>);</span><br><span class="line">   <span class="keyword">if</span> (mDefaultConfigFactory == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">               <span class="string">&quot;Invalid app configuration provided. Missing UseCaseConfigFactory.&quot;</span>);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   mCameraRepository.init(mCameraFactory);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>直接从 AppConfig 中获取到具体实例，mCameraFactory对应的实例是<code>Camera2CameraFactory</code>，mCameraRepository.init(mCameraFactory)进行 Camera 相关的初始化</p>
+<h3 id="CameraRepository-init"><a href="#CameraRepository-init" class="headerlink" title="CameraRepository.init"></a>CameraRepository.init</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">(CameraFactory cameraFactory)</span> &#123;</span><br><span class="line">   <span class="keyword">synchronized</span> (mCamerasLock) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">            Set&lt;String&gt; camerasList = cameraFactory.getAvailableCameraIds();</span><br><span class="line">            <span class="keyword">for</span> (String id : camerasList) &#123;</span><br><span class="line">               Log.d(TAG, <span class="string">&quot;Added camera: &quot;</span> + id);</span><br><span class="line">               mCameras.put(id, cameraFactory.getCamera(id));</span><br><span class="line">            &#125;</span><br><span class="line">      ...</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>getAvailableCameraIds</code>获取可用 Camera Id列表，Camera2CameraFactory的<code>getCamera</code>真正初始化Camera</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> BaseCamera <span class="title function_">getCamera</span><span class="params">(<span class="meta">@NonNull</span> String cameraId)</span> &#123;</span><br><span class="line">   <span class="type">Camera</span> <span class="variable">camera</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Camera</span>(mCameraManager, cameraId,</span><br><span class="line">            mAvailabilityRegistry.getAvailableCameraCount(), sHandler);</span><br><span class="line">   mAvailabilityRegistry.registerCamera(camera);</span><br><span class="line">   <span class="keyword">return</span> camera;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过<code>CameraAvailabilityRegistry</code>的<code>registerCamera</code>方法进行Camera注册<br>到此为止，CameraX 相关属性就初始化完成了</p>
+<h2 id="bindToLifecycle"><a href="#bindToLifecycle" class="headerlink" title="bindToLifecycle"></a>bindToLifecycle</h2><p>从第一个<code>UseCase</code>预览(preview)来讲解CameraX 生命周期过程，以及数据传输流程。<br>前面一篇文章已经讲解过 CameraX 的使用，其中预览(preivew)，会先声明<code>PreviewConfig</code>,通过 config 生成<code>Preivew</code>，<code>preview.setOnPreviewOutputUpdateListener</code>设置监听Camera数据流。这一系列流程能够实现，主要通过<code>CameraX.bindToLifecycle</code>实现<br>具体流程：<br><img src="https://s1.ax1x.com/2020/04/13/GXRjuq.png" alt="GXRjuq.png"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">bindToLifecycle</span><span class="params">(LifecycleOwner lifecycleOwner, UseCase... useCases)</span> &#123;</span><br><span class="line">   Threads.checkMainThread();</span><br><span class="line">   <span class="type">UseCaseGroupLifecycleController</span> <span class="variable">useCaseGroupLifecycleController</span> <span class="operator">=</span></span><br><span class="line">            INSTANCE.getOrCreateUseCaseGroup(lifecycleOwner);</span><br><span class="line">   <span class="type">UseCaseGroup</span> <span class="variable">useCaseGroupToBind</span> <span class="operator">=</span> useCaseGroupLifecycleController.getUseCaseGroup();</span><br><span class="line"></span><br><span class="line">   Collection&lt;UseCaseGroupLifecycleController&gt; controllers =</span><br><span class="line">            INSTANCE.mUseCaseGroupRepository.getUseCaseGroups();</span><br><span class="line">   <span class="comment">//检查UseCase 只能在一个lifecycle上</span></span><br><span class="line">   <span class="keyword">for</span> (UseCase useCase : useCases) &#123;</span><br><span class="line">      <span class="keyword">for</span> (UseCaseGroupLifecycleController controller : controllers) &#123;</span><br><span class="line">            <span class="type">UseCaseGroup</span> <span class="variable">useCaseGroup</span> <span class="operator">=</span> controller.getUseCaseGroup();</span><br><span class="line">            <span class="keyword">if</span> (useCaseGroup.contains(useCase) &amp;&amp; useCaseGroup != useCaseGroupToBind) &#123;</span><br><span class="line">               <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">                        String.format(</span><br><span class="line">                              <span class="string">&quot;Use case %s already bound to a different lifecycle.&quot;</span>,</span><br><span class="line">                              useCase));</span><br><span class="line">            &#125;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">//onBind监听回调</span></span><br><span class="line">   <span class="keyword">for</span> (UseCase useCase : useCases) &#123;</span><br><span class="line">      useCase.onBind();</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   calculateSuggestedResolutions(lifecycleOwner, useCases);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> (UseCase useCase : useCases) &#123;</span><br><span class="line">      useCaseGroupToBind.addUseCase(useCase);</span><br><span class="line">      <span class="keyword">for</span> (String cameraId : useCase.getAttachedCameraIds()) &#123;</span><br><span class="line">            attach(cameraId, useCase);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   useCaseGroupLifecycleController.notifyState();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="UseCaseGroupLifecycleController"><a href="#UseCaseGroupLifecycleController" class="headerlink" title="UseCaseGroupLifecycleController"></a>UseCaseGroupLifecycleController</h3><p>创建 UseCaseGroupLifecycleController，UseCaseGroup控制器，通过Lifecycle组件进行 start 和 stop 操作</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">UseCaseGroupLifecycleController</span> <span class="variable">useCaseGroupLifecycleController</span> <span class="operator">=</span></span><br><span class="line">            INSTANCE.getOrCreateUseCaseGroup(lifecycleOwner);</span><br><span class="line">...</span><br><span class="line"><span class="keyword">private</span> UseCaseGroupLifecycleController <span class="title function_">getOrCreateUseCaseGroup</span><span class="params">(LifecycleOwner lifecycleOwner)</span> &#123;</span><br><span class="line">   <span class="keyword">return</span> mUseCaseGroupRepository.getOrCreateUseCaseGroup(</span><br><span class="line">            lifecycleOwner, <span class="keyword">new</span> <span class="title class_">UseCaseGroupRepository</span>.UseCaseGroupSetup() &#123;</span><br><span class="line">               <span class="meta">@Override</span></span><br><span class="line">               <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setup</span><span class="params">(UseCaseGroup useCaseGroup)</span> &#123;</span><br><span class="line">                  useCaseGroup.setListener(mCameraRepository);</span><br><span class="line">               &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过UseCaseGroupRepository创建UseCaseGroupLifecycleController</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">UseCaseGroupLifecycleController <span class="title function_">getOrCreateUseCaseGroup</span><span class="params">(</span></span><br><span class="line"><span class="params">            LifecycleOwner lifecycleOwner, UseCaseGroupSetup groupSetup)</span> &#123;</span><br><span class="line">   UseCaseGroupLifecycleController useCaseGroupLifecycleController;</span><br><span class="line">   <span class="keyword">synchronized</span> (mUseCasesLock) &#123;</span><br><span class="line">      <span class="comment">//如果有缓存，则直接返回，否则进行创建</span></span><br><span class="line">      useCaseGroupLifecycleController = mLifecycleToUseCaseGroupControllerMap.get(</span><br><span class="line">               lifecycleOwner);</span><br><span class="line">      <span class="keyword">if</span> (useCaseGroupLifecycleController == <span class="literal">null</span>) &#123;</span><br><span class="line">            useCaseGroupLifecycleController = createUseCaseGroup(lifecycleOwner);</span><br><span class="line">            groupSetup.setup(useCaseGroupLifecycleController.getUseCaseGroup());</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> useCaseGroupLifecycleController;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"> <span class="keyword">private</span> UseCaseGroupLifecycleController <span class="title function_">createUseCaseGroup</span><span class="params">(LifecycleOwner lifecycleOwner)</span> &#123;</span><br><span class="line">   ...</span><br><span class="line">   <span class="comment">// Need to add observer before creating UseCaseGroupLifecycleController to make sure</span></span><br><span class="line">   <span class="comment">// UseCaseGroups can be stopped before the latest active one is started.</span></span><br><span class="line">   lifecycleOwner.getLifecycle().addObserver(createLifecycleObserver());</span><br><span class="line">   <span class="type">UseCaseGroupLifecycleController</span> <span class="variable">useCaseGroupLifecycleController</span> <span class="operator">=</span></span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">UseCaseGroupLifecycleController</span>(lifecycleOwner.getLifecycle());</span><br><span class="line">   <span class="comment">//创建后，放入 map 缓存</span></span><br><span class="line">   <span class="keyword">synchronized</span> (mUseCasesLock) &#123;</span><br><span class="line">      mLifecycleToUseCaseGroupControllerMap.put(lifecycleOwner,</span><br><span class="line">               useCaseGroupLifecycleController);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> useCaseGroupLifecycleController;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>创建UseCaseGroupLifecycleController，并增加Lifecycle生命周期控制：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">UseCaseGroupLifecycleController(Lifecycle lifecycle) &#123;</span><br><span class="line">   <span class="built_in">this</span>(lifecycle, <span class="keyword">new</span> <span class="title class_">UseCaseGroup</span>());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** Wraps an existing &#123;<span class="doctag">@link</span> UseCaseGroup&#125; so it is controlled by lifecycle transitions. */</span></span><br><span class="line">UseCaseGroupLifecycleController(Lifecycle lifecycle, UseCaseGroup useCaseGroup) &#123;</span><br><span class="line">   <span class="built_in">this</span>.mUseCaseGroup = useCaseGroup;</span><br><span class="line">   <span class="built_in">this</span>.mLifecycle = lifecycle;</span><br><span class="line">   <span class="comment">//绑定Lifecycle</span></span><br><span class="line">   lifecycle.addObserver(<span class="built_in">this</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@OnLifecycleEvent(Lifecycle.Event.ON_START)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onStart</span><span class="params">(LifecycleOwner lifecycleOwner)</span> &#123;</span><br><span class="line">   <span class="keyword">synchronized</span> (mUseCaseGroupLock) &#123;</span><br><span class="line">      mUseCaseGroup.start();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@OnLifecycleEvent(Lifecycle.Event.ON_STOP)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onStop</span><span class="params">(LifecycleOwner lifecycleOwner)</span> &#123;</span><br><span class="line">   <span class="keyword">synchronized</span> (mUseCaseGroupLock) &#123;</span><br><span class="line">      mUseCaseGroup.stop();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onDestroy</span><span class="params">(LifecycleOwner lifecycleOwner)</span> &#123;</span><br><span class="line">   <span class="keyword">synchronized</span> (mUseCaseGroupLock) &#123;</span><br><span class="line">      mUseCaseGroup.clear();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的代码，增加了<code>ON_START</code>，<code>ON_STOP</code>，<code>ON_DESTROY</code>的生命周期监听  </p>
+<h3 id="calculateSuggestedResolutions"><a href="#calculateSuggestedResolutions" class="headerlink" title="calculateSuggestedResolutions"></a>calculateSuggestedResolutions</h3><p>根据传入的配置，生成各个UseCase的最佳解决方案。后面的代码会以<code>Preview</code>这个 UseCase 展开，其他 UseCase 代码逻辑类似。  </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">calculateSuggestedResolutions</span><span class="params">(LifecycleOwner lifecycleOwner,</span></span><br><span class="line"><span class="params">            UseCase... useCases)</span> &#123;</span><br><span class="line">   <span class="comment">// There will only one lifecycleOwner active. Therefore, only collect use cases belong to</span></span><br><span class="line">   <span class="comment">// same lifecycleOwner and calculate the suggested resolutions.</span></span><br><span class="line">   ...</span><br><span class="line">   <span class="comment">// Collect new use cases for different camera devices</span></span><br><span class="line">   <span class="keyword">for</span> (UseCase useCase : useCases) &#123;</span><br><span class="line">      <span class="type">String</span> <span class="variable">cameraId</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">            cameraId = getCameraWithCameraDeviceConfig(</span><br><span class="line">                  (CameraDeviceConfig) useCase.getUseCaseConfig());</span><br><span class="line">      &#125; <span class="keyword">catch</span> (CameraInfoUnavailableException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(</span><br><span class="line">                  <span class="string">&quot;Unable to get camera id for the camera device config.&quot;</span>, e);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   ...</span><br><span class="line">   <span class="comment">// Get suggested resolutions and update the use case session configuration</span></span><br><span class="line">   <span class="keyword">for</span> (String cameraId : newCameraIdUseCaseMap.keySet()) &#123;</span><br><span class="line">      Map&lt;UseCase, Size&gt; suggestResolutionsMap =</span><br><span class="line">               getSurfaceManager()</span><br><span class="line">                        .getSuggestedResolutions(</span><br><span class="line">                              cameraId,</span><br><span class="line">                              originalCameraIdUseCaseMap.get(cameraId),</span><br><span class="line">                              newCameraIdUseCaseMap.get(cameraId));</span><br><span class="line"></span><br><span class="line">      <span class="keyword">for</span> (UseCase useCase : newCameraIdUseCaseMap.get(cameraId)) &#123;</span><br><span class="line">            <span class="type">Size</span> <span class="variable">resolution</span> <span class="operator">=</span> suggestResolutionsMap.get(useCase);</span><br><span class="line">            Map&lt;String, Size&gt; suggestedCameraSurfaceResolutionMap = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line">            suggestedCameraSurfaceResolutionMap.put(cameraId, resolution);</span><br><span class="line">            <span class="comment">//更新配置</span></span><br><span class="line">            useCase.updateSuggestedResolution(suggestedCameraSurfaceResolutionMap);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>每个 UseCase 会去更新对应配置 updateSuggestedResolution-&gt;onSuggestedResolutionUpdated</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">updateSuggestedResolution</span><span class="params">(Map&lt;String, Size&gt; suggestedResolutionMap)</span> &#123;</span><br><span class="line">   Map&lt;String, Size&gt; resolutionMap = onSuggestedResolutionUpdated(suggestedResolutionMap);</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>onSuggestedResolutionUpdated针对不同的 UseCase 有不同的实现，这里以<code>Preview</code>为例</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> Map&lt;String, Size&gt; <span class="title function_">onSuggestedResolutionUpdated</span><span class="params">(</span></span><br><span class="line"><span class="params">            Map&lt;String, Size&gt; suggestedResolutionMap)</span> &#123;</span><br><span class="line">   <span class="comment">//获取前面配置的 config</span></span><br><span class="line">   <span class="type">PreviewConfig</span> <span class="variable">config</span> <span class="operator">=</span> (PreviewConfig) getUseCaseConfig();</span><br><span class="line">   <span class="type">String</span> <span class="variable">cameraId</span> <span class="operator">=</span> getCameraIdUnchecked(config);</span><br><span class="line">   <span class="type">Size</span> <span class="variable">resolution</span> <span class="operator">=</span> suggestedResolutionMap.get(cameraId);</span><br><span class="line">   ...</span><br><span class="line">   <span class="comment">//设置 config</span></span><br><span class="line">   updateConfigAndOutput(config, resolution);</span><br><span class="line">   <span class="keyword">return</span> suggestedResolutionMap;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">updateConfigAndOutput</span><span class="params">(PreviewConfig config, Size resolution)</span> &#123;</span><br><span class="line">   <span class="type">String</span> <span class="variable">cameraId</span> <span class="operator">=</span> getCameraIdUnchecked(config);</span><br><span class="line">   <span class="comment">//初始化pipeline</span></span><br><span class="line">   mSessionConfigBuilder = createPipeline(config, resolution);</span><br><span class="line">   attachToCamera(cameraId, mSessionConfigBuilder.build());</span><br><span class="line">   updateOutput(mSurfaceTextureHolder.getSurfaceTexture(), resolution);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Preview-createPipeline"><a href="#Preview-createPipeline" class="headerlink" title="Preview.createPipeline"></a>Preview.createPipeline</h3><p>创建Preview管道，通过 PreviewConfig 的配置，创建对应的显示Surface和SessionConfig</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">SessionConfig.Builder <span class="title function_">createPipeline</span><span class="params">(PreviewConfig config, Size resolution)</span> &#123;</span><br><span class="line">   Threads.checkMainThread();</span><br><span class="line">   SessionConfig.<span class="type">Builder</span> <span class="variable">sessionConfigBuilder</span> <span class="operator">=</span> SessionConfig.Builder.createFrom(config);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">final</span> <span class="type">CaptureProcessor</span> <span class="variable">captureProcessor</span> <span class="operator">=</span> config.getCaptureProcessor(<span class="literal">null</span>);</span><br><span class="line">   <span class="comment">//扩展的 extensions实现</span></span><br><span class="line">   <span class="keyword">if</span> (captureProcessor != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="type">CaptureStage</span> <span class="variable">captureStage</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CaptureStage</span>.DefaultCaptureStage();</span><br><span class="line">      <span class="comment">// <span class="doctag">TODO:</span> To allow user to use an Executor for the processing.</span></span><br><span class="line">      ...</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">final</span> <span class="type">ImageInfoProcessor</span> <span class="variable">processor</span> <span class="operator">=</span> config.getImageInfoProcessor(<span class="literal">null</span>);</span><br><span class="line">      <span class="keyword">if</span> (processor != <span class="literal">null</span>) &#123;</span><br><span class="line">            sessionConfigBuilder.addCameraCaptureCallback(<span class="keyword">new</span> <span class="title class_">CameraCaptureCallback</span>() &#123;</span><br><span class="line">               <span class="meta">@Override</span></span><br><span class="line">               <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onCaptureCompleted</span><span class="params">(</span></span><br><span class="line"><span class="params">                        <span class="meta">@NonNull</span> CameraCaptureResult cameraCaptureResult)</span> &#123;</span><br><span class="line">                  <span class="built_in">super</span>.onCaptureCompleted(cameraCaptureResult);</span><br><span class="line">                  <span class="keyword">if</span> (processor.process(</span><br><span class="line">                           <span class="keyword">new</span> <span class="title class_">CameraCaptureResultImageInfo</span>(cameraCaptureResult))) &#123;</span><br><span class="line">                        notifyUpdated();</span><br><span class="line">                  &#125;</span><br><span class="line">               &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">//默认的 Surface</span></span><br><span class="line">      <span class="type">CheckedSurfaceTexture</span> <span class="variable">checkedSurfaceTexture</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CheckedSurfaceTexture</span>(resolution);</span><br><span class="line"></span><br><span class="line">      mSurfaceTextureHolder = checkedSurfaceTexture;</span><br><span class="line">      sessionConfigBuilder.addSurface(checkedSurfaceTexture);</span><br><span class="line">   &#125;</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里就可以看到我们熟悉的味道，在Camera2中 用到的<code>Surface</code>，<code>Session</code>相关配置，后面会用到相关配置。<br>在<code>CheckedSurfaceTexture</code>中会创建<code>FixedSizeSurfaceTexture</code>用来显示图像。  </p>
+<h3 id="Preview-updateOutput"><a href="#Preview-updateOutput" class="headerlink" title="Preview.updateOutput"></a>Preview.updateOutput</h3><p>增加数据的监听</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">updateOutput</span><span class="params">(SurfaceTexture surfaceTexture, Size resolution)</span> &#123;</span><br><span class="line">   <span class="type">PreviewConfig</span> <span class="variable">useCaseConfig</span> <span class="operator">=</span> (PreviewConfig) getUseCaseConfig();</span><br><span class="line">   ...</span><br><span class="line">   <span class="type">PreviewOutput</span> <span class="variable">newOutput</span> <span class="operator">=</span></span><br><span class="line">            PreviewOutput.create(surfaceTexture, resolution, relativeRotation);</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Only update the output if something has changed</span></span><br><span class="line">   <span class="keyword">if</span> (!Objects.equals(mLatestPreviewOutput, newOutput)) &#123;</span><br><span class="line">      <span class="type">SurfaceTexture</span> <span class="variable">oldTexture</span> <span class="operator">=</span></span><br><span class="line">               (mLatestPreviewOutput == <span class="literal">null</span>)</span><br><span class="line">                        ? <span class="literal">null</span></span><br><span class="line">                        : mLatestPreviewOutput.getSurfaceTexture();</span><br><span class="line">      <span class="type">OnPreviewOutputUpdateListener</span> <span class="variable">outputListener</span> <span class="operator">=</span> getOnPreviewOutputUpdateListener();</span><br><span class="line">      ...</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (outputListener != <span class="literal">null</span>) &#123;</span><br><span class="line">            mSurfaceDispatched = <span class="literal">true</span>;</span><br><span class="line">            updateListener(outputListener, newOutput);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>根据Preview设置的setOnPreviewOutputUpdateListener，获取到对应的Listener，通过<code>updateListener</code>方法回调数据。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">updateListener</span><span class="params">(OnPreviewOutputUpdateListener listener, PreviewOutput output)</span> &#123;</span><br><span class="line">   ...</span><br><span class="line">   mOutputUpdateExecutor.execute(() -&gt; listener.onUpdated(output));</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="notifyState"><a href="#notifyState" class="headerlink" title="notifyState"></a>notifyState</h3><p>调用UseCaseGroupLifecycleController的notifyState，激活 UseCase 状态，在UseCaseGroupLifecycleController中有增加生命周期的监听，在<code>ON_START</code>状态会调用<code>mUseCaseGroup.start</code>方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">notifyState</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">synchronized</span> (mUseCaseGroupLock) &#123;</span><br><span class="line">      <span class="keyword">if</span> (mLifecycle.getCurrentState().isAtLeast(State.STARTED)) &#123;</span><br><span class="line">            mUseCaseGroup.start();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">for</span> (UseCase useCase : mUseCaseGroup.getUseCases()) &#123;</span><br><span class="line">            useCase.notifyState();</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="UseCaseGroup-start"><a href="#UseCaseGroup-start" class="headerlink" title="UseCaseGroup.start"></a>UseCaseGroup.start</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">start</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">synchronized</span> (mListenerLock) &#123;</span><br><span class="line">      <span class="keyword">if</span> (mListener != <span class="literal">null</span>) &#123;</span><br><span class="line">            mListener.onGroupActive(<span class="built_in">this</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      mIsActive = <span class="literal">true</span>;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>启动 start 状态，调用<code>CameraRepository</code>的<code>onGroupActive</code>方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onGroupActive</span><span class="params">(UseCaseGroup useCaseGroup)</span> &#123;</span><br><span class="line">   <span class="keyword">synchronized</span> (mCamerasLock) &#123;</span><br><span class="line">      Map&lt;String, Set&lt;UseCase&gt;&gt; cameraIdToUseCaseMap = useCaseGroup.getCameraIdToUseCaseMap();</span><br><span class="line">      <span class="keyword">for</span> (Map.Entry&lt;String, Set&lt;UseCase&gt;&gt; cameraUseCaseEntry :</span><br><span class="line">               cameraIdToUseCaseMap.entrySet()) &#123;</span><br><span class="line">            <span class="type">BaseCamera</span> <span class="variable">camera</span> <span class="operator">=</span> getCamera(cameraUseCaseEntry.getKey());</span><br><span class="line">            attachUseCasesToCamera(camera, cameraUseCaseEntry.getValue());</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">attachUseCasesToCamera</span><span class="params">(BaseCamera camera, Set&lt;UseCase&gt; useCases)</span> &#123;</span><br><span class="line">   camera.addOnlineUseCase(useCases);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>camera.addOnlineUseCase</code>关联UseCase 和 Camera。</p>
+<h3 id="Camera-addOnlineUseCase"><a href="#Camera-addOnlineUseCase" class="headerlink" title="Camera.addOnlineUseCase"></a>Camera.addOnlineUseCase</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addOnlineUseCase</span><span class="params">(<span class="meta">@NonNull</span> <span class="keyword">final</span> Collection&lt;UseCase&gt; useCases)</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (useCases.isEmpty()) &#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Attaches the surfaces of use case to the Camera (prevent from surface abandon crash)</span></span><br><span class="line">   <span class="comment">// addOnlineUseCase could be called with duplicate use case, so we need to filter out</span></span><br><span class="line">   <span class="comment">// use cases that are either pending for addOnline or are already online.</span></span><br><span class="line">   <span class="comment">// It&#x27;s ok for two thread to run here, since it‘ll do nothing if use case is already</span></span><br><span class="line">   <span class="comment">// pending.</span></span><br><span class="line">   <span class="keyword">synchronized</span> (mPendingLock) &#123;</span><br><span class="line">      <span class="keyword">for</span> (UseCase useCase : useCases) &#123;</span><br><span class="line">            <span class="type">boolean</span> <span class="variable">isOnline</span> <span class="operator">=</span> isUseCaseOnline(useCase);</span><br><span class="line">            <span class="keyword">if</span> (mPendingForAddOnline.contains(useCase) || isOnline) &#123;</span><br><span class="line">               <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            notifyAttachToUseCaseSurfaces(useCase);</span><br><span class="line">            mPendingForAddOnline.add(useCase);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   ...</span><br><span class="line">   updateCaptureSessionConfig();</span><br><span class="line">   resetCaptureSession(<span class="comment">/*abortInFlightCaptures=*/</span><span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> (mState == InternalState.OPENED) &#123;</span><br><span class="line">      openCaptureSession();</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      open();</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   updateCameraControlPreviewAspectRatio(useCases);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在addOnlineUseCase方法中，open会去打开Camera设备。</p>
+<h3 id="Camera-open"><a href="#Camera-open" class="headerlink" title="Camera.open"></a>Camera.open</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">open</span><span class="params">()</span> &#123;</span><br><span class="line">   ...</span><br><span class="line">   <span class="keyword">switch</span> (mState) &#123;</span><br><span class="line">      <span class="keyword">case</span> INITIALIZED:</span><br><span class="line">            openCameraDevice();</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">      <span class="keyword">case</span> CLOSING:</span><br><span class="line">            setState(InternalState.REOPENING);</span><br><span class="line">            <span class="comment">// If session close has not yet completed, then the camera is still open. We</span></span><br><span class="line">            <span class="comment">// can move directly back into an OPENED state.</span></span><br><span class="line">            <span class="comment">// If session close is already complete, then the camera is closing. We&#x27;ll reopen</span></span><br><span class="line">            <span class="comment">// the camera in the camera state callback.</span></span><br><span class="line">            <span class="comment">// If the camera device is currently in an error state, we need to close the</span></span><br><span class="line">            <span class="comment">// camera before reopening, so we cannot directly reopen.</span></span><br><span class="line">            <span class="keyword">if</span> (!isSessionCloseComplete() &amp;&amp; mCameraDeviceError == ERROR_NONE) &#123;</span><br><span class="line">               Preconditions.checkState(mCameraDevice != <span class="literal">null</span>,</span><br><span class="line">                        <span class="string">&quot;Camera Device should be open if session close is not complete&quot;</span>);</span><br><span class="line">               setState(InternalState.OPENED);</span><br><span class="line">               openCaptureSession();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">            Log.d(TAG, <span class="string">&quot;open() ignored due to being in state: &quot;</span> + mState);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">void</span> <span class="title function_">openCameraDevice</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="comment">// Check that we have an available camera to open here before attempting</span></span><br><span class="line">   <span class="comment">// to open the camera again.</span></span><br><span class="line">   <span class="keyword">if</span> (!mCameraAvailability.isCameraAvailable()) &#123;</span><br><span class="line">      Log.d(TAG, <span class="string">&quot;No cameras available. Waiting for available camera before opening camera: &quot;</span></span><br><span class="line">               + mCameraId);</span><br><span class="line">      setState(InternalState.PENDING_OPEN);</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      setState(InternalState.OPENING);</span><br><span class="line">   &#125;</span><br><span class="line">   ...</span><br><span class="line">   <span class="comment">//真正打开相机</span></span><br><span class="line">   mCameraManager.openCamera(mCameraId, mExecutor, createDeviceStateCallback());</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接下来就是Camera2的预览流程</p>
+<h2 id="Camera"><a href="#Camera" class="headerlink" title="Camera"></a>Camera</h2><p>CameraX封装了Camera2的标准预览流程，这些类都是在 CameraX 库中<br><img src="https://s1.ax1x.com/2020/04/13/GXLFRP.png" alt="GXLFRP.png"></p>
+<h3 id="CameraDevice-StateCallback"><a href="#CameraDevice-StateCallback" class="headerlink" title="CameraDevice.StateCallback"></a>CameraDevice.StateCallback</h3><p><code>openCameraDevice</code>的stateCallback</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">StateCallback</span> <span class="keyword">extends</span> <span class="title class_">CameraDevice</span>.StateCallback &#123;</span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onOpened</span><span class="params">(CameraDevice cameraDevice)</span> &#123;</span><br><span class="line">      Log.d(TAG, <span class="string">&quot;CameraDevice.onOpened(): &quot;</span> + cameraDevice.getId());</span><br><span class="line">      mCameraDevice = cameraDevice;</span><br><span class="line">      mCameraDeviceError = ERROR_NONE;</span><br><span class="line">      <span class="keyword">switch</span> (mState) &#123;</span><br><span class="line">            <span class="keyword">case</span> CLOSING:</span><br><span class="line">            <span class="keyword">case</span> RELEASING:</span><br><span class="line">               <span class="comment">// No session should have yet been opened, so close camera directly here.</span></span><br><span class="line">               Preconditions.checkState(isSessionCloseComplete());</span><br><span class="line">               mCameraDevice.close();</span><br><span class="line">               mCameraDevice = <span class="literal">null</span>;</span><br><span class="line">               <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> OPENING:</span><br><span class="line">            <span class="keyword">case</span> REOPENING:</span><br><span class="line">               setState(InternalState.OPENED);</span><br><span class="line">               openCaptureSession();</span><br><span class="line">               <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">               <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">                        <span class="string">&quot;onOpened() should not be possible from state: &quot;</span> + mState);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">void</span> <span class="title function_">openCaptureSession</span><span class="params">()</span> &#123;</span><br><span class="line">   ...</span><br><span class="line">   mCaptureSession.open(validatingBuilder.build(), mCameraDevice);</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="CaptureSession-open"><a href="#CaptureSession-open" class="headerlink" title="CaptureSession.open"></a>CaptureSession.open</h3><p>创建CaptureSession</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">open</span><span class="params">(SessionConfig sessionConfig, CameraDevice cameraDevice)</span></span><br><span class="line">      <span class="keyword">throws</span> CameraAccessException, DeferrableSurface.SurfaceClosedException &#123;</span><br><span class="line">   <span class="keyword">synchronized</span> (mStateLock) &#123;</span><br><span class="line">      <span class="keyword">switch</span> (mState) &#123;</span><br><span class="line">            <span class="keyword">case</span> UNINITIALIZED:</span><br><span class="line">               <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">                        <span class="string">&quot;open() should not be possible in state: &quot;</span> + mState);</span><br><span class="line">            <span class="keyword">case</span> INITIALIZED:</span><br><span class="line">               <span class="comment">//Camera中传入的essionConfig，默认有TEMPLATE_PREVIEW的 surface 实现</span></span><br><span class="line">               List&lt;DeferrableSurface&gt; surfaces = sessionConfig.getSurfaces();</span><br><span class="line">               ...</span><br><span class="line">               <span class="comment">//状态更新</span></span><br><span class="line">               notifySurfaceAttached();</span><br><span class="line">               mState = State.OPENING;</span><br><span class="line">               ...</span><br><span class="line">               <span class="type">SessionConfigurationCompat</span> <span class="variable">sessionConfigCompat</span> <span class="operator">=</span></span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">SessionConfigurationCompat</span>(</span><br><span class="line">                              SessionConfigurationCompat.SESSION_REGULAR,</span><br><span class="line">                              outputConfigList,</span><br><span class="line">                              getExecutor(),</span><br><span class="line">                              comboCallback);</span><br><span class="line"></span><br><span class="line">               <span class="type">CaptureRequest</span> <span class="variable">captureRequest</span> <span class="operator">=</span></span><br><span class="line">                        Camera2CaptureRequestBuilder.buildWithoutTarget(</span><br><span class="line">                              captureConfigBuilder.build(),</span><br><span class="line">                              cameraDevice);</span><br><span class="line"></span><br><span class="line">               <span class="keyword">if</span> (captureRequest != <span class="literal">null</span>) &#123;</span><br><span class="line">                  sessionConfigCompat.setSessionParameters(captureRequest);</span><br><span class="line">               &#125;</span><br><span class="line">               <span class="comment">//创建CaptureSession，CameraDeviceCompat根据 Android 版本有不同的实现</span></span><br><span class="line">               CameraDeviceCompat.createCaptureSession(cameraDevice, sessionConfigCompat);</span><br><span class="line"></span><br><span class="line">      ...</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+<p>在Camera2的使用中，CameraDevice的createCaptureSession可以创建预览画面，CameraX的CaptureSession很好的封装了这些实现。<br>在<code>CaptureSession.open</code>传入的SessionConfig，是在<code>Camera2AppConfig.create</code>创建的时候生成</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> AppConfig <span class="title function_">create</span><span class="params">(Context context)</span> &#123;</span><br><span class="line">   <span class="comment">// Create the camera factory for creating Camera2 camera objects</span></span><br><span class="line">   <span class="type">CameraFactory</span> <span class="variable">cameraFactory</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Camera2CameraFactory</span>(context);</span><br><span class="line">   <span class="comment">// PreviewConfig 配置</span></span><br><span class="line">   configFactory.installDefaultProvider(</span><br><span class="line">            PreviewConfig.class, <span class="keyword">new</span> <span class="title class_">PreviewConfigProvider</span>(cameraFactory, context));</span><br><span class="line"></span><br><span class="line">   AppConfig.<span class="type">Builder</span> <span class="variable">appConfigBuilder</span> <span class="operator">=</span></span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">AppConfig</span>.Builder()</span><br><span class="line">                  .setCameraFactory(cameraFactory)</span><br><span class="line">                  .setDeviceSurfaceManager(surfaceManager)</span><br><span class="line">                  .setUseCaseConfigFactory(configFactory);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">return</span> appConfigBuilder.build();</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//PreviewConfigProvider配置getConfig</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> PreviewConfig <span class="title function_">getConfig</span><span class="params">(LensFacing lensFacing)</span> &#123;</span><br><span class="line">   PreviewConfig.<span class="type">Builder</span> <span class="variable">builder</span> <span class="operator">=</span></span><br><span class="line">            PreviewConfig.Builder.fromConfig(Preview.DEFAULT_CONFIG.getConfig(lensFacing));</span><br><span class="line">   <span class="comment">// SessionConfig containing all intrinsic properties needed for Preview</span></span><br><span class="line">   SessionConfig.<span class="type">Builder</span> <span class="variable">sessionBuilder</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SessionConfig</span>.Builder();</span><br><span class="line">   <span class="comment">// createCaptureSession中的 preview 设置</span></span><br><span class="line">   sessionBuilder.setTemplateType(CameraDevice.TEMPLATE_PREVIEW);</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Add options to UseCaseConfig</span></span><br><span class="line">   builder.setDefaultSessionConfig(sessionBuilder.build());</span><br><span class="line">   builder.setSessionOptionUnpacker(Camera2SessionOptionUnpacker.INSTANCE);</span><br><span class="line"></span><br><span class="line">   CaptureConfig.<span class="type">Builder</span> <span class="variable">captureBuilder</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CaptureConfig</span>.Builder();</span><br><span class="line">   captureBuilder.setTemplateType(CameraDevice.TEMPLATE_PREVIEW);</span><br><span class="line">   builder.setDefaultCaptureConfig(captureBuilder.build());</span><br><span class="line">   builder.setCaptureOptionUnpacker(Camera2CaptureOptionUnpacker.INSTANCE);</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>CameraDeviceCompat.createCaptureSession</code>的CameraCaptureSession回调</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">StateCallback</span> <span class="keyword">extends</span> <span class="title class_">CameraCaptureSession</span>.StateCallback &#123;</span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onConfigured</span><span class="params">(<span class="meta">@NonNull</span> CameraCaptureSession session)</span> &#123;</span><br><span class="line">      <span class="keyword">synchronized</span> (mStateLock) &#123;</span><br><span class="line">            <span class="keyword">switch</span> (mState) &#123;</span><br><span class="line">               <span class="keyword">case</span> UNINITIALIZED:</span><br><span class="line">               <span class="keyword">case</span> INITIALIZED:</span><br><span class="line">               <span class="keyword">case</span> OPENED:</span><br><span class="line">               <span class="keyword">case</span> RELEASED:</span><br><span class="line">                  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">                           <span class="string">&quot;onConfigured() should not be possible in state: &quot;</span> + mState);</span><br><span class="line">               <span class="keyword">case</span> OPENING:</span><br><span class="line">                  ...</span><br><span class="line">                  <span class="comment">// Issue capture request of enableSession if exists.</span></span><br><span class="line">                  <span class="keyword">if</span> (mSessionConfig != <span class="literal">null</span>) &#123;</span><br><span class="line">                        <span class="type">Config</span> <span class="variable">implOptions</span> <span class="operator">=</span> mSessionConfig.getImplementationOptions();</span><br><span class="line">                        <span class="type">CameraEventCallbacks</span> <span class="variable">eventCallbacks</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Camera2Config</span>(</span><br><span class="line">                              implOptions).getCameraEventCallback(</span><br><span class="line">                              CameraEventCallbacks.createEmptyCallback());</span><br><span class="line">                              <span class="comment">//可配置CameraEventCallback的EnableSession回调</span></span><br><span class="line">                        List&lt;CaptureConfig&gt; list =</span><br><span class="line">                              eventCallbacks.createComboCallback().onEnableSession();</span><br><span class="line">                        <span class="keyword">if</span> (!list.isEmpty()) &#123;</span><br><span class="line">                           issueCaptureRequests(setupConfiguredSurface(list));</span><br><span class="line">                        &#125;</span><br><span class="line">                  &#125;</span><br><span class="line">                  <span class="comment">//</span></span><br><span class="line">                  issueRepeatingCaptureRequests();</span><br><span class="line">                  issueBurstCaptureRequest();</span><br><span class="line">                  <span class="keyword">break</span>;</span><br><span class="line">               ...</span><br><span class="line">            &#125;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="CaptureSession-issueRepeatingCaptureRequests"><a href="#CaptureSession-issueRepeatingCaptureRequests" class="headerlink" title="CaptureSession.issueRepeatingCaptureRequests"></a>CaptureSession.issueRepeatingCaptureRequests</h3><p>开启Camera预览</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">issueRepeatingCaptureRequests</span><span class="params">()</span> &#123;</span><br><span class="line">   ...</span><br><span class="line">   <span class="type">CaptureConfig</span> <span class="variable">captureConfig</span> <span class="operator">=</span> mSessionConfig.getRepeatingCaptureConfig();</span><br><span class="line">   ...</span><br><span class="line">   <span class="comment">// The override priority for implementation options</span></span><br><span class="line">   <span class="comment">// P1 CameraEventCallback onRepeating options</span></span><br><span class="line">   <span class="comment">// P2 SessionConfig options</span></span><br><span class="line">   CaptureConfig.<span class="type">Builder</span> <span class="variable">captureConfigBuilder</span> <span class="operator">=</span> CaptureConfig.Builder.from(captureConfig);</span><br><span class="line"></span><br><span class="line">   <span class="comment">//创建CaptureRequest</span></span><br><span class="line">   <span class="type">CaptureRequest</span> <span class="variable">captureRequest</span> <span class="operator">=</span> Camera2CaptureRequestBuilder.build(</span><br><span class="line">            captureConfigBuilder.build(), mCameraCaptureSession.getDevice(),</span><br><span class="line">            mConfiguredSurfaceMap);</span><br><span class="line">   <span class="keyword">if</span> (captureRequest == <span class="literal">null</span>) &#123;</span><br><span class="line">         Log.d(TAG, <span class="string">&quot;Skipping issuing empty request for session.&quot;</span>);</span><br><span class="line">         <span class="keyword">return</span>;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">//设置Capture回调</span></span><br><span class="line">   CameraCaptureSession.<span class="type">CaptureCallback</span> <span class="variable">comboCaptureCallback</span> <span class="operator">=</span></span><br><span class="line">            createCamera2CaptureCallback(</span><br><span class="line">                     captureConfig.getCameraCaptureCallbacks(),</span><br><span class="line">                     mCaptureCallback);</span><br><span class="line"></span><br><span class="line">   CameraCaptureSessionCompat.setSingleRepeatingRequest(mCameraCaptureSession,</span><br><span class="line">            captureRequest, mExecutor, comboCaptureCallback);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>CameraCaptureSessionCompat.setSingleRepeatingRequest 也是区分 Android 版本</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> CameraCaptureSessionCompatImpl <span class="title function_">chooseImplementation</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= <span class="number">28</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">CameraCaptureSessionCompatApi28Impl</span>();</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">CameraCaptureSessionCompatBaseImpl</span>();</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//CameraCaptureSessionCompatBaseImpl，和平时使用的一样</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">setSingleRepeatingRequest</span><span class="params">(<span class="meta">@NonNull</span> CameraCaptureSession captureSession,</span></span><br><span class="line"><span class="params">      <span class="meta">@NonNull</span> CaptureRequest request, <span class="meta">@NonNull</span> Executor executor,</span></span><br><span class="line"><span class="params">      <span class="meta">@NonNull</span> CameraCaptureSession.CaptureCallback listener)</span> <span class="keyword">throws</span> CameraAccessException &#123;</span><br><span class="line">   Preconditions.checkNotNull(captureSession);</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Wrap the executor in the callback</span></span><br><span class="line">   CameraCaptureSession.<span class="type">CaptureCallback</span> <span class="variable">cb</span> <span class="operator">=</span></span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">CameraCaptureSessionCompat</span>.CaptureCallbackExecutorWrapper(executor, listener);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">return</span> captureSession.setRepeatingRequest(</span><br><span class="line">            request, cb, MainThreadAsyncHandler.getInstance());</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//CameraCaptureSessionCompatApi28Impl，新版本 API 有些变化</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">setSingleRepeatingRequest</span><span class="params">(<span class="meta">@NonNull</span> CameraCaptureSession captureSession,</span></span><br><span class="line"><span class="params">      <span class="meta">@NonNull</span> CaptureRequest request, <span class="meta">@NonNull</span> Executor executor,</span></span><br><span class="line"><span class="params">      <span class="meta">@NonNull</span> CameraCaptureSession.CaptureCallback listener)</span> <span class="keyword">throws</span> CameraAccessException &#123;</span><br><span class="line">   Preconditions.checkNotNull(captureSession);</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Call through directly to executor API</span></span><br><span class="line">   <span class="keyword">return</span> captureSession.setSingleRepeatingRequest(request, executor, listener);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从Camera的开启到预览，以及读取各种配置，整个过程到此就完成了，接下来介绍如何拍照，这个流程相对来说比较简单</p>
+<h2 id="ImageCapture-takePicture"><a href="#ImageCapture-takePicture" class="headerlink" title="ImageCapture.takePicture"></a>ImageCapture.takePicture</h2><p>拍照的流程：<br><img src="https://s1.ax1x.com/2020/04/17/JZ52bd.png" alt="JZ52bd.png"></p>
+<h3 id="sendImageCaptureRequest"><a href="#sendImageCaptureRequest" class="headerlink" title="sendImageCaptureRequest"></a>sendImageCaptureRequest</h3><p>创建 ImageCaptureRequest，设置cameraId、targetRatio、回调等</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">sendImageCaptureRequest</span><span class="params">(</span></span><br><span class="line"><span class="params">      <span class="meta">@Nullable</span> Executor listenerExecutor, OnImageCapturedListener listener)</span> &#123;</span><br><span class="line"></span><br><span class="line">   <span class="type">String</span> <span class="variable">cameraId</span> <span class="operator">=</span> getCameraIdUnchecked(mConfig);</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Get the relative rotation or default to 0 if the camera info is unavailable</span></span><br><span class="line">   <span class="type">int</span> <span class="variable">relativeRotation</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="type">CameraInfoInternal</span> <span class="variable">cameraInfoInternal</span> <span class="operator">=</span> CameraX.getCameraInfo(cameraId);</span><br><span class="line">      relativeRotation =</span><br><span class="line">               cameraInfoInternal.getSensorRotationDegrees(</span><br><span class="line">                        mConfig.getTargetRotation(Surface.ROTATION_0));</span><br><span class="line">   &#125; <span class="keyword">catch</span> (CameraInfoUnavailableException e) &#123;</span><br><span class="line">      Log.e(TAG, <span class="string">&quot;Unable to retrieve camera sensor orientation.&quot;</span>, e);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="type">Rational</span> <span class="variable">targetRatio</span> <span class="operator">=</span> mConfig.getTargetAspectRatioCustom(<span class="literal">null</span>);</span><br><span class="line">   targetRatio = ImageUtil.rotate(targetRatio, relativeRotation);</span><br><span class="line"></span><br><span class="line">   mImageCaptureRequests.offer(</span><br><span class="line">            <span class="keyword">new</span> <span class="title class_">ImageCaptureRequest</span>(relativeRotation, targetRatio, listenerExecutor, listener));</span><br><span class="line">   <span class="keyword">if</span> (mImageCaptureRequests.size() == <span class="number">1</span>) &#123;</span><br><span class="line">      issueImageCaptureRequests();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="takePictureInternal"><a href="#takePictureInternal" class="headerlink" title="takePictureInternal"></a>takePictureInternal</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">issueImageCaptureRequests</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (mImageCaptureRequests.isEmpty()) &#123;</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">   &#125;</span><br><span class="line">   takePictureInternal();</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="comment">//拍照流程</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">takePictureInternal</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="comment">//自定义 Future 调用链</span></span><br><span class="line">   FutureChain.from(preTakePicture(state))</span><br><span class="line">      .transformAsync&#123;</span><br><span class="line">         ...</span><br><span class="line">         <span class="keyword">return</span> ImageCapture.<span class="built_in">this</span>.issueTakePicture(state);</span><br><span class="line">      &#125;)</span><br><span class="line">      .transformAsync&#123;</span><br><span class="line">         ...</span><br><span class="line">         <span class="keyword">return</span> ImageCapture.<span class="built_in">this</span>.postTakePicture(state);</span><br><span class="line">      &#125;)</span><br><span class="line">      .addCallback(</span><br><span class="line">         ...</span><br><span class="line">         onTakePictureFinish(<span class="literal">null</span>);</span><br><span class="line">      )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>自定义了整个拍照工作流，通过<code>issueTakePicture</code>进行拍照，<code>postTakePicture</code>是拍照成功，释放资源，取消3A。下面重点看下<code>issueTakePicture</code>流程</p>
+<h3 id="issueTakePicture"><a href="#issueTakePicture" class="headerlink" title="issueTakePicture"></a>issueTakePicture</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ListenableFuture&lt;Void&gt; <span class="title function_">issueTakePicture</span><span class="params">(TakePictureState state)</span> &#123;</span><br><span class="line">   ...</span><br><span class="line">   getCurrentCameraControl().submitCaptureRequests(captureConfigs);</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过<code>CameraControl</code>提交Capture 请求，<code>CameraControl</code>具体实现是<code>Camera2CameraControl</code>。</p>
+<h3 id="submitCaptureRequests"><a href="#submitCaptureRequests" class="headerlink" title="submitCaptureRequests"></a>submitCaptureRequests</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">submitCaptureRequests</span><span class="params">(<span class="meta">@NonNull</span> <span class="keyword">final</span> List&lt;CaptureConfig&gt; captureConfigs)</span> &#123;</span><br><span class="line">   mExecutor.execute(<span class="keyword">new</span> <span class="title class_">Runnable</span>() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">            submitCaptureRequestsInternal(captureConfigs);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;);</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">void</span> <span class="title function_">submitCaptureRequestsInternal</span><span class="params">(<span class="keyword">final</span> List&lt;CaptureConfig&gt; captureConfigs)</span> &#123;</span><br><span class="line">   mControlUpdateListener.onCameraControlCaptureRequests(captureConfigs);</span><br><span class="line">   <span class="comment">//mControlUpdateListener是Camera 的回调，onCameraControlCaptureRequests 真正实现在 Camera 中</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//Camera.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onCameraControlUpdateSessionConfig</span><span class="params">(<span class="meta">@NonNull</span> SessionConfig sessionConfig)</span> &#123;</span><br><span class="line">   mCameraControlSessionConfig = sessionConfig;</span><br><span class="line">   updateCaptureSessionConfig();</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">updateCaptureSessionConfig</span><span class="params">()</span> &#123;</span><br><span class="line">      ...</span><br><span class="line">         <span class="type">SessionConfig</span> <span class="variable">sessionConfig</span> <span class="operator">=</span> validatingBuilder.build();</span><br><span class="line">         mCaptureSession.setSessionConfig(sessionConfig);</span><br><span class="line">      ...</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line">Camera 获取 Capture的SessionConfig，通过`CaptureSession`进行状态控制</span><br></pre></td></tr></table></figure>
+<h3 id="CaptureSession-setSessionConfig"><a href="#CaptureSession-setSessionConfig" class="headerlink" title="CaptureSession.setSessionConfig"></a>CaptureSession.setSessionConfig</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">setSessionConfig</span><span class="params">(SessionConfig sessionConfig)</span> &#123;</span><br><span class="line">   <span class="keyword">synchronized</span> (mStateLock) &#123;</span><br><span class="line">      <span class="keyword">switch</span> (mState) &#123;</span><br><span class="line">            <span class="keyword">case</span> UNINITIALIZED:</span><br><span class="line">               <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">                        <span class="string">&quot;setSessionConfig() should not be possible in state: &quot;</span> + mState);</span><br><span class="line">            <span class="keyword">case</span> INITIALIZED:</span><br><span class="line">            <span class="keyword">case</span> OPENING:</span><br><span class="line">               mSessionConfig = sessionConfig;</span><br><span class="line">               <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> OPENED:</span><br><span class="line">               mSessionConfig = sessionConfig;</span><br><span class="line"></span><br><span class="line">               <span class="keyword">if</span> (!mConfiguredSurfaceMap.keySet().containsAll(sessionConfig.getSurfaces())) &#123;</span><br><span class="line">                  Log.e(TAG, <span class="string">&quot;Does not have the proper configured lists&quot;</span>);</span><br><span class="line">                  <span class="keyword">return</span>;</span><br><span class="line">               &#125;</span><br><span class="line"></span><br><span class="line">               Log.d(TAG, <span class="string">&quot;Attempting to submit CaptureRequest after setting&quot;</span>);</span><br><span class="line">               issueRepeatingCaptureRequests();</span><br><span class="line">               <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> CLOSED:</span><br><span class="line">            <span class="keyword">case</span> RELEASING:</span><br><span class="line">            <span class="keyword">case</span> RELEASED:</span><br><span class="line">               <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">                        <span class="string">&quot;Session configuration cannot be set on a closed/released session.&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在Camera的OPENED状态，则进行拍照流程</p>
+<h3 id="issueRepeatingCaptureRequests"><a href="#issueRepeatingCaptureRequests" class="headerlink" title="issueRepeatingCaptureRequests"></a>issueRepeatingCaptureRequests</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">issueRepeatingCaptureRequests</span><span class="params">()</span> &#123;</span><br><span class="line">   ...</span><br><span class="line">   CameraCaptureSession.<span class="type">CaptureCallback</span> <span class="variable">comboCaptureCallback</span> <span class="operator">=</span></span><br><span class="line">                    createCamera2CaptureCallback(</span><br><span class="line">                            captureConfig.getCameraCaptureCallbacks(),</span><br><span class="line">                            mCaptureCallback);</span><br><span class="line"></span><br><span class="line">   CameraCaptureSessionCompat.setSingleRepeatingRequest(mCameraCaptureSession,</span><br><span class="line">                    captureRequest, mExecutor, comboCaptureCallback);</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>CameraCaptureSessionCompat</code>根据 Android 版本有<code>CameraCaptureSessionCompatBaseImpl</code>和<code>CameraCaptureSessionCompatApi28Impl</code>两种实现，最终通过<code>CameraCaptureSession</code>实现真正的拍照。<br>拍照完成后，通过最开始设置的 Listener 进行回调</p>
+<h3 id="ImageCapture-createPipeline"><a href="#ImageCapture-createPipeline" class="headerlink" title="ImageCapture.createPipeline"></a>ImageCapture.createPipeline</h3><p>在 Preview 那小节，讲解过 bindToLifecycle 流程，这里的<code>ImageCapture</code>也是一个<code>UseCase</code>。在CameraX中的<code>calculateSuggestedResolutions</code>方法，最终会调用到各个<code>UseCase</code>的<code>onSuggestedResolutionUpdated</code>方法。在<code>ImageCapture</code>的<code>onSuggestedResolutionUpdated</code>方法，通过<code>createPipeline</code>创建了拍照数据的回调</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">SessionConfig.Builder <span class="title function_">createPipeline</span><span class="params">(ImageCaptureConfig config,  Size resolution)</span> &#123;</span><br><span class="line">   ...</span><br><span class="line">   <span class="comment">//和 Camera2的流程一致</span></span><br><span class="line">   mProcessingImageResultThread = <span class="keyword">new</span> <span class="title class_">HandlerThread</span>(<span class="string">&quot;OnImageAvailableHandlerThread&quot;</span>);</span><br><span class="line">   mProcessingImageResultThread.start();</span><br><span class="line">   mProcessingImageResultHandler = <span class="keyword">new</span> <span class="title class_">Handler</span>(mProcessingImageResultThread.getLooper());</span><br><span class="line">   ...</span><br><span class="line">   mImageReader.setOnImageAvailableListener(</span><br><span class="line">      <span class="keyword">new</span> <span class="title class_">ImageReaderProxy</span>.OnImageAvailableListener() &#123;</span><br><span class="line">         <span class="meta">@Override</span></span><br><span class="line">         <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onImageAvailable</span><span class="params">(ImageReaderProxy imageReader)</span> &#123;</span><br><span class="line">            <span class="type">ImageProxy</span> <span class="variable">image</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                  image = imageReader.acquireLatestImage();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (IllegalStateException e) &#123;</span><br><span class="line">                  Log.e(TAG, <span class="string">&quot;Failed to acquire latest image.&quot;</span>, e);</span><br><span class="line">            &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                  <span class="keyword">if</span> (image != <span class="literal">null</span>) &#123;</span><br><span class="line">                     <span class="comment">// Call the head request listener to process the captured image.</span></span><br><span class="line">                     ImageCaptureRequest imageCaptureRequest;</span><br><span class="line">                     <span class="keyword">if</span> ((imageCaptureRequest = mImageCaptureRequests.peek()) != <span class="literal">null</span>) &#123;</span><br><span class="line">                        <span class="type">SingleCloseImageProxy</span> <span class="variable">wrappedImage</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SingleCloseImageProxy</span>(</span><br><span class="line">                                 image);</span><br><span class="line">                        wrappedImage.addOnImageCloseListener(mOnImageCloseListener);</span><br><span class="line">                        <span class="comment">//ImageCaptureRequest设置 Listener</span></span><br><span class="line">                        imageCaptureRequest.dispatchImage(wrappedImage);</span><br><span class="line">                     &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="comment">// Discard the image if we have no requests.</span></span><br><span class="line">                        image.close();</span><br><span class="line">                     &#125;</span><br><span class="line">                  &#125;</span><br><span class="line">            &#125;</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      mProcessingImageResultHandler);</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>ImageReader设置了 Camera 数据会调用，并通过<code>ImageCaptureRequest</code>的<code>dispatchImage</code>方法进行分发</p>
+<h3 id="ImageCaptureRequest-dispatchImage"><a href="#ImageCaptureRequest-dispatchImage" class="headerlink" title="ImageCaptureRequest.dispatchImage"></a>ImageCaptureRequest.dispatchImage</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">dispatchImage</span><span class="params">(<span class="keyword">final</span> ImageProxy image)</span> &#123;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">         mListenerExecutor.execute(<span class="keyword">new</span> <span class="title class_">Runnable</span>() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">               <span class="type">Size</span> <span class="variable">sourceSize</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Size</span>(image.getWidth(), image.getHeight());</span><br><span class="line">               <span class="keyword">if</span> (ImageUtil.isAspectRatioValid(sourceSize, mTargetRatio)) &#123;</span><br><span class="line">                     image.setCropRect(</span><br><span class="line">                           ImageUtil.computeCropRectFromAspectRatio(sourceSize,</span><br><span class="line">                                    mTargetRatio));</span><br><span class="line">               &#125;</span><br><span class="line">               <span class="comment">//真正的回调</span></span><br><span class="line">               mListener.onCaptureSuccess(image, mRotationDegrees);</span><br><span class="line">            &#125;</span><br><span class="line">         &#125;);</span><br><span class="line">   &#125; <span class="keyword">catch</span> (RejectedExecutionException e) &#123;</span><br><span class="line">         Log.e(TAG, <span class="string">&quot;Unable to post to the supplied executor.&quot;</span>);</span><br><span class="line"></span><br><span class="line">         <span class="comment">// Unable to execute on the supplied executor, close the image.</span></span><br><span class="line">         image.close();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>mListener</code>是一个封装Listener，在<code>ImageCapture</code>中实现</p>
+<h3 id="Listener"><a href="#Listener" class="headerlink" title="Listener"></a>Listener</h3><p>Listener的关系图：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">+-----------------------+</span><br><span class="line">|                       |</span><br><span class="line">|ImageCapture.          |</span><br><span class="line">|OnImageCapturedListener|</span><br><span class="line">|                       |</span><br><span class="line">+-----------+-----------+</span><br><span class="line">            |</span><br><span class="line">            |</span><br><span class="line">+-----------v-----------+      +----------------------+</span><br><span class="line">|                       |      |                      |</span><br><span class="line">| ImageSaver.           |      | ImageCapture.        |</span><br><span class="line">| OnImageSavedListener  +------&gt; OnImageSavedListener |</span><br><span class="line">|                       |      |                      |</span><br><span class="line">+-----------------------+      +----------------------+</span><br></pre></td></tr></table></figure>
+<p><code>OnImageCapturedListener</code>的实现，其中通过<code>ImageSaver</code>设置的<code>OnImageSavedListener</code>回调到最上层的<code>OnImageSavedListener</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">OnImageCapturedListener</span> <span class="variable">imageCaptureCallbackWrapper</span> <span class="operator">=</span></span><br><span class="line">   <span class="keyword">new</span> <span class="title class_">OnImageCapturedListener</span>() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onCaptureSuccess</span><span class="params">(ImageProxy image, <span class="type">int</span> rotationDegrees)</span> &#123;</span><br><span class="line">         CameraXExecutors.ioExecutor()</span><br><span class="line">                  .execute(</span><br><span class="line">                           <span class="keyword">new</span> <span class="title class_">ImageSaver</span>(</span><br><span class="line">                                 image,</span><br><span class="line">                                 saveLocation,</span><br><span class="line">                                 rotationDegrees,</span><br><span class="line">                                 metadata.isReversedHorizontal,</span><br><span class="line">                                 metadata.isReversedVertical,</span><br><span class="line">                                 metadata.location,</span><br><span class="line">                                 executor,</span><br><span class="line">                                 imageSavedListenerWrapper));</span><br><span class="line">      &#125;</span><br><span class="line">   ...</span><br><span class="line">   &#125;;</span><br><span class="line"><span class="comment">// ImageSaver是一个 Runnable，主要 run 的实现</span></span><br><span class="line"><span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">ImageSaver</span> <span class="keyword">implements</span> <span class="title class_">Runnable</span> &#123;</span><br><span class="line">   ...</span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">      ...</span><br><span class="line">      <span class="comment">//图像处理</span></span><br><span class="line">      ...</span><br><span class="line">      <span class="keyword">if</span> (saveError != <span class="literal">null</span>) &#123;</span><br><span class="line">         postError(saveError, errorMessage, exception);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">         postSuccess();</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   ...</span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">postSuccess</span><span class="params">()</span> &#123;</span><br><span class="line">      mExecutor.execute(<span class="keyword">new</span> <span class="title class_">Runnable</span>() &#123;</span><br><span class="line">         <span class="meta">@Override</span></span><br><span class="line">         <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="comment">//最外层回调</span></span><br><span class="line">            mListener.onImageSaved(mFile);</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>整个拍照流程和数据回调就讲解完毕了。<br>通过对 CameraX的 Preview 和 ImageCapture的分析，CameraX对Camera2进行完整的封装，统一参数配置，自动计算Resolution，简化Camera2的开发，并增加了生命周期控制，对外只暴露了简单接口。<br>使用该库，只需要简单的几行代码就可以实现以前Camera2复杂的操作。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://developer.android.com/training/camerax/architecture">CameraX 架构</a></li>
+<li><a target="_blank" rel="noopener" href="https://medium.com/androiddevelopers/core-principles-behind-camerax-jetpack-library-8e8380f7604c">Core Principles Behind CameraX Jetpack Library</a></li>
+</ul>
+
+    </article>
+    <!-- license -->
+    
+        <div class="license-wrapper">
+            <p>原文作者：<a href="http://yeungeek.github.io">Yeungeek</a>
+            <p>原文链接：<a href="http://yeungeek.github.io/2020/02/28/AndroidCamera-CameraXSource/">http://yeungeek.github.io/2020/02/28/AndroidCamera-CameraXSource/</a>
+            <p>发表日期：<a href="http://yeungeek.github.io/2020/02/28/AndroidCamera-CameraXSource/">February 28th 2020, 9:35:11 pm</a>
+            <p>更新日期：<a href="http://yeungeek.github.io/2020/02/28/AndroidCamera-CameraXSource/">July 31st 2023, 11:40:56 am</a>
+            <p>版权声明：本文采用<a rel="license noopener" target="_blank" href="http://creativecommons.org/licenses/by-nc/4.0/">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可</p>
+        </div>
+    
+    <!-- paginator -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href="/2020/05/09/Android-Knowledge-System/" title="Android知识体系">
+                    <div class="nextTitle">Android知识体系</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href="/2020/01/29/AndroidCamera-CameraViewAnalysis/" title="Android Camera-CameraView源码分析">
+                    <div class="prevTitle">Android Camera-CameraView源码分析</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- comment -->
+    
+        <div class="post-comment">
+            <!-- 来必力 City 版安装代码 -->
+
+
+            
+
+            
+
+            
+
+            <!-- utteranc评论 -->
+
+
+            <!-- partial('_partial/comment/changyan') -->
+            <!--PC版-->
+
+
+            
+            
+
+            
+
+        </div>
+    
+    <!-- timeliness note -->
+    <!-- idea from: https://hexo.fluid-dev.com/posts/hexo-injector/#%E6%96%87%E7%AB%A0%E6%97%B6%E6%95%88%E6%80%A7%E6%8F%90%E7%A4%BA -->
+    
+    <!-- Mathjax -->
+    
+</main>
+
+                <!-- profile -->
+                
+            </div>
+            <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+        <div class="social">
+            
+    
+        
+            
+                <a href="mailto:yeungeek@gmail.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yeungeek" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                    
+                    <img class="profile-qr" src="/assets/wechat_qr.jpeg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="//weibo.com/springyounger" class="iconfont-archer weibo" target="_blank" title=weibo></a>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="//twitter.com/yeungeek" class="iconfont-archer twitter" target="_blank" title=twitter></a>
+            
+        
+    
+        
+    
+        
+            
+                <a href="//stackoverflow.com/users/943667/yeungeek" class="iconfont-archer stack-overflow" target="_blank" title=stack-overflow></a>
+            
+        
+    
+        
+            
+                <a href="//segmentfault.com/u/yeungeek" class="iconfont-archer segmentFault" target="_blank" title=segmentFault></a>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+
+        </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- website approve for Chinese user -->
+    
+    <!-- 不蒜子  -->
+    
+        <div class="busuanzi-container">
+            
+             
+                <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+            
+        </div>
+    	
+</footer>
+
+        </div>
+        <!-- toc -->
+        
+            <div class="toc-wrapper toc-wrapper-loding" style=
+
+
+
+
+
+
+
+    top:50vh;
+
+>
+                <div class="toc-catalog">
+                    <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+                </div>
+                <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BC%95%E7%94%A8"><span class="toc-number">1.</span> <span class="toc-text">引用</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#CameraX%E7%BB%93%E6%9E%84"><span class="toc-number">2.</span> <span class="toc-text">CameraX结构</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#CameraX%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">2.1.</span> <span class="toc-text">CameraX初始化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Camera2Initializer"><span class="toc-number">2.1.1.</span> <span class="toc-text">Camera2Initializer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Camera2AppConfig"><span class="toc-number">2.1.2.</span> <span class="toc-text">Camera2AppConfig</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CameraX-initInternal"><span class="toc-number">2.1.3.</span> <span class="toc-text">CameraX.initInternal</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CameraRepository-init"><span class="toc-number">2.1.4.</span> <span class="toc-text">CameraRepository.init</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#bindToLifecycle"><span class="toc-number">2.2.</span> <span class="toc-text">bindToLifecycle</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#UseCaseGroupLifecycleController"><span class="toc-number">2.2.1.</span> <span class="toc-text">UseCaseGroupLifecycleController</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#calculateSuggestedResolutions"><span class="toc-number">2.2.2.</span> <span class="toc-text">calculateSuggestedResolutions</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Preview-createPipeline"><span class="toc-number">2.2.3.</span> <span class="toc-text">Preview.createPipeline</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Preview-updateOutput"><span class="toc-number">2.2.4.</span> <span class="toc-text">Preview.updateOutput</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#notifyState"><span class="toc-number">2.2.5.</span> <span class="toc-text">notifyState</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#UseCaseGroup-start"><span class="toc-number">2.2.6.</span> <span class="toc-text">UseCaseGroup.start</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Camera-addOnlineUseCase"><span class="toc-number">2.2.7.</span> <span class="toc-text">Camera.addOnlineUseCase</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Camera-open"><span class="toc-number">2.2.8.</span> <span class="toc-text">Camera.open</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Camera"><span class="toc-number">2.3.</span> <span class="toc-text">Camera</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CameraDevice-StateCallback"><span class="toc-number">2.3.1.</span> <span class="toc-text">CameraDevice.StateCallback</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CaptureSession-open"><span class="toc-number">2.3.2.</span> <span class="toc-text">CaptureSession.open</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CaptureSession-issueRepeatingCaptureRequests"><span class="toc-number">2.3.3.</span> <span class="toc-text">CaptureSession.issueRepeatingCaptureRequests</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ImageCapture-takePicture"><span class="toc-number">2.4.</span> <span class="toc-text">ImageCapture.takePicture</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#sendImageCaptureRequest"><span class="toc-number">2.4.1.</span> <span class="toc-text">sendImageCaptureRequest</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#takePictureInternal"><span class="toc-number">2.4.2.</span> <span class="toc-text">takePictureInternal</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#issueTakePicture"><span class="toc-number">2.4.3.</span> <span class="toc-text">issueTakePicture</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#submitCaptureRequests"><span class="toc-number">2.4.4.</span> <span class="toc-text">submitCaptureRequests</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CaptureSession-setSessionConfig"><span class="toc-number">2.4.5.</span> <span class="toc-text">CaptureSession.setSessionConfig</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#issueRepeatingCaptureRequests"><span class="toc-number">2.4.6.</span> <span class="toc-text">issueRepeatingCaptureRequests</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ImageCapture-createPipeline"><span class="toc-number">2.4.7.</span> <span class="toc-text">ImageCapture.createPipeline</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ImageCaptureRequest-dispatchImage"><span class="toc-number">2.4.8.</span> <span class="toc-text">ImageCaptureRequest.dispatchImage</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Listener"><span class="toc-number">2.4.9.</span> <span class="toc-text">Listener</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-number">3.</span> <span class="toc-text">参考</span></a></li></ol>
+            </div>
+        
+        <!-- sidebar -->
+        <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+        <div class="sidebar-panel-archives">
+    <!-- 在 ejs 中将 archive 按照时间排序 -->
+    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 18
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+        
+            
+            
+            <div class="archive-year"> 2020 </div>
+            <ul class="year-list">
+            
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/09</span>
+            <a class="archive-post-title" href="/2020/05/09/Android-Knowledge-System/">Android知识体系</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/28</span>
+            <a class="archive-post-title" href="/2020/02/28/AndroidCamera-CameraXSource/">Android Camera-CameraX源码分析</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/29</span>
+            <a class="archive-post-title" href="/2020/01/29/AndroidCamera-CameraViewAnalysis/">Android Camera-CameraView源码分析</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/24</span>
+            <a class="archive-post-title" href="/2020/01/24/AndroidCamera-Orientation/">Android Camera-相机尺寸、方向和图像数据</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span>
+            <a class="archive-post-title" href="/2020/01/21/AndroidCamera-UsingCameraView/">Android Camera-CameraView和CameraX使用</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/19</span>
+            <a class="archive-post-title" href="/2020/01/19/AndroidCamera-UsingCamera2/">Android Camera-Camera2使用</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/17</span>
+            <a class="archive-post-title" href="/2020/01/17/AndroidCamera-UsingCamera1/">Android Camera-Camera1使用</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/14</span>
+            <a class="archive-post-title" href="/2020/01/14/AndroidCamera-Basic/">Android Camera-基础知识篇</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/13</span>
+            <a class="archive-post-title" href="/2020/01/13/AndroidCamera-Series/">Android Camera-系列文章</a>
+        </li>
+    
+        
+            
+            
+                
+                </ul>
+            
+            <div class="archive-year"> 2019 </div>
+            <ul class="year-list">
+            
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/21</span>
+            <a class="archive-post-title" href="/2019/08/21/AndroidNDK-DeepUnderstandJNI/">Android NDK-深入理解JNI</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/25</span>
+            <a class="archive-post-title" href="/2019/07/25/Network-Retrofit/">Android网络编程-Retrofit源码角度分析Http</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/17</span>
+            <a class="archive-post-title" href="/2019/07/17/Network-OKHttp/">Android网络编程-OKHttp源码角度分析Http</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/15</span>
+            <a class="archive-post-title" href="/2019/07/15/Network-Cookie-Session-Token/">Android网络编程-Cookie，Session，Token</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/12</span>
+            <a class="archive-post-title" href="/2019/07/12/Network-Http/">Android网络编程-HTTP/HTTPS</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/26</span>
+            <a class="archive-post-title" href="/2019/06/26/Network-Socket/">Android网络编程-Socket</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/21</span>
+            <a class="archive-post-title" href="/2019/06/21/Network-TCP-IP/">Android网络编程-TCP/IP协议</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/14</span>
+            <a class="archive-post-title" href="/2019/06/14/Network-Basic/">Android网络编程-计算机网络基础</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span>
+            <a class="archive-post-title" href="/2019/06/13/Network-Series/">Android网络编程-系列文章</a>
+        </li>
+    
+    </div>
+</div>
+
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+        
+            <span class="sidebar-tag-name" data-tags="Camera">
+                <span class="iconfont-archer">&#xe606;</span>
+                Camera
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Camera2">
+                <span class="iconfont-archer">&#xe606;</span>
+                Camera2
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="CameraX">
+                <span class="iconfont-archer">&#xe606;</span>
+                CameraX
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Android">
+                <span class="iconfont-archer">&#xe606;</span>
+                Android
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="SurfaceView">
+                <span class="iconfont-archer">&#xe606;</span>
+                SurfaceView
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="TextureView">
+                <span class="iconfont-archer">&#xe606;</span>
+                TextureView
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="CameraView">
+                <span class="iconfont-archer">&#xe606;</span>
+                CameraView
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Orientation">
+                <span class="iconfont-archer">&#xe606;</span>
+                Orientation
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Network">
+                <span class="iconfont-archer">&#xe606;</span>
+                Network
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="JNI">
+                <span class="iconfont-archer">&#xe606;</span>
+                JNI
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="NDK">
+                <span class="iconfont-archer">&#xe606;</span>
+                NDK
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Session">
+                <span class="iconfont-archer">&#xe606;</span>
+                Session
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Cookie">
+                <span class="iconfont-archer">&#xe606;</span>
+                Cookie
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Token">
+                <span class="iconfont-archer">&#xe606;</span>
+                Token
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Http">
+                <span class="iconfont-archer">&#xe606;</span>
+                Http
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Https">
+                <span class="iconfont-archer">&#xe606;</span>
+                Https
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="OKHttp">
+                <span class="iconfont-archer">&#xe606;</span>
+                OKHttp
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Retrofit">
+                <span class="iconfont-archer">&#xe606;</span>
+                Retrofit
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Socket">
+                <span class="iconfont-archer">&#xe606;</span>
+                Socket
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="TCP">
+                <span class="iconfont-archer">&#xe606;</span>
+                TCP
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="UDP">
+                <span class="iconfont-archer">&#xe606;</span>
+                UDP
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="IP">
+                <span class="iconfont-archer">&#xe606;</span>
+                IP
+            </span>
+        
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+        缺失模块，请参考主题文档进行安装配置：https://github.com/fi3ework/hexo-theme-archer#%E5%AE%89%E8%A3%85%E4%B8%BB%E9%A2%98
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="Camera">
+            <span class="iconfont-archer">&#xe60a;</span>
+            Camera
+        </span>
+    
+        <span class="sidebar-category-name" data-categories="Android框架层">
+            <span class="iconfont-archer">&#xe60a;</span>
+            Android框架层
+        </span>
+    
+        <span class="sidebar-category-name" data-categories="Android应用层">
+            <span class="iconfont-archer">&#xe60a;</span>
+            Android应用层
+        </span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+
+    </div>
+</div>
+
+        <!-- site-meta -->
+        <script>
+    var siteMetaRoot = "/"
+    if (siteMetaRoot === "undefined") {
+        siteMetaRoot = '/'
+    }
+    var siteMeta = {
+        url: "http://yeungeek.github.io",
+        root: siteMetaRoot,
+        author: "Yeungeek"
+    }
+</script>
+
+        <!-- import experimental options here -->
+        <!-- Custom Font -->
+
+
+        <!-- main func -->
+        <script src="/scripts/main.js?v=20211217"></script>
+        <!-- dark mode -->
+        <script src="/scripts/dark.js?v=20211217"></script>
+        <!-- fancybox -->
+        <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" defer></script>
+        <!-- algolia -->
+        
+        <!-- busuanzi -->
+        
+            <script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+        
+        <!-- CNZZ -->
+        
+        <!-- async load share.js -->
+        
+            <script src="/scripts/share.js?v=20211217" async></script>
+        
+        <!-- mermaid -->
+        
+            <script src='https://cdn.jsdelivr.net/npm/mermaid@8.11.0/dist/mermaid.min.js'></script>
+            <script>
+                if (window.mermaid) {
+                    mermaid.initialize({theme: 'dark'});
+                }
+            </script>
+        
+    </body>
+</html>
