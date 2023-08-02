@@ -6,7 +6,7 @@
   <link href="http://yeungeek.github.io/atom.xml" rel="self"/>
   
   <link href="http://yeungeek.github.io/"/>
-  <updated>2023-07-31T03:40:56.493Z</updated>
+  <updated>2023-08-02T02:35:41.545Z</updated>
   <id>http://yeungeek.github.io/</id>
   
   <author>
@@ -15,6 +15,35 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>OpenGL教程</title>
+    <link href="http://yeungeek.github.io/2023/08/02/OpenGL-Tutorials/"/>
+    <id>http://yeungeek.github.io/2023/08/02/OpenGL-Tutorials/</id>
+    <published>2023-08-02T02:25:45.000Z</published>
+    <updated>2023-08-02T02:35:41.545Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul><li><a href="https://mp.weixin.qq.com/s/2BVT9nUsdJppO48nXs92-g">全网最全的 Android 音视频和 OpenGL ES 干货</a></li><li><a href="https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MzA4MjU1MDk3Ng==&action=getalbum&album_id=1337181710408302593&scene=173&from_msgid=2451526136&from_itemidx=1&count=3&nolastread=1#wechat_redirect">OpenGL专题</a></li><li><a href="https://cstsinghua.github.io/2018/07/12/openGL%E5%AD%A6%E4%B9%A0%E8%B7%AF%E5%BE%84/">OpenGL学习路径</a></li><li><a href="https://zhuanlan.zhihu.com/p/553509106">图形渲染学习路线</a></li></ul>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;h1 id=&quot;参考&quot;&gt;&lt;a href=&quot;#参考&quot; class=&quot;headerlink&quot; title=&quot;参考&quot;&gt;&lt;/a&gt;参考&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://mp.weixin.qq.com/s/2BVT9nUsdJppO48nXs92-g&quot;&gt;全网最全</summary>
+      
+    
+    
+    
+    <category term="OpenGL" scheme="http://yeungeek.github.io/categories/OpenGL/"/>
+    
+    
+    <category term="OpenGL" scheme="http://yeungeek.github.io/tags/OpenGL/"/>
+    
+    <category term="OpenGLES" scheme="http://yeungeek.github.io/tags/OpenGLES/"/>
+    
+    <category term="Video" scheme="http://yeungeek.github.io/tags/Video/"/>
+    
+  </entry>
   
   <entry>
     <title>Android知识体系</title>
