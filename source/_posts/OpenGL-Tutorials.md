@@ -7,7 +7,7 @@ tags:
     - Video
 categories:
     - OpenGL
-sticky: 2
+sticky: 10
 ---
 OpenGL的概念，相信大家都听说过，应用场景非常广泛，音视频、图形渲染、游戏等等。学习OpenGL是有一定的门槛，期间也看过很多其他OpenGL教程，有些写的是非常不错的，例如[LearnOpenGL](https://learnopengl.com/)，能够系统性的学习OpenGL概念和应用。本系列教程，主要会从Android OpenGL ES入手，系统性的介绍图形学渲染技术，结合音视频进行相关应用，并分析两个教科书级别的项目，更加巩固OpenGL技术。
 <!--more-->
