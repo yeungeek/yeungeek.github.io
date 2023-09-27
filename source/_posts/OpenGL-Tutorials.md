@@ -21,16 +21,16 @@ OpenGL的概念，相信大家都听说过，应用场景非常广泛，音视�
 6. OpenGLES 3.0 - EGL详解
 7. OpenGLES 3.0 - VBO、EBO 和 VAO
 8. OpenGLES 3.0 - FBO离屏渲染
-10. OpenGLES 3.0 - 相机预览
-11. OpenGLES 3.0 - 相机基础滤镜
-12. OpenGLES 3.0 - 3D模型
-13. OpenGLES 3.0 - 3D模型加载和渲染
-14. OpenGLES 3.0 - PBO
-15. OpenGLES 3.0 - UBO和TBO
+9. OpenGLES 3.0 - PBO
+10. OpenGLES 3.0 - UBO和TBO
+11. OpenGLES 3.0 - 相机预览
+12. OpenGLES 3.0 - 相机基础滤镜
+13. OpenGLES 3.0 - 3D模型
+14. OpenGLES 3.0 - 3D模型加载和渲染
+
 # 源码分析
 1. AudioVideoRecording源码分析
 2. Grafika源码分析
-
 
 # 参考
 - [全网最全的 Android 音视频和 OpenGL ES 干货](https://mp.weixin.qq.com/s/26BywT1MbM20zybeWD12mw)
