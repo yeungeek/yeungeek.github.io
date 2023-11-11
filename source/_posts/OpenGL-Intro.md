@@ -300,5 +300,6 @@ glDisableVertexAttribArray(0);
 # 参考
 * [OpenGL](https://www.opengl.org/)
 * [OpenGL ES](https://www.khronos.org/opengles/)
+* [OpenGL Refpages](https://registry.khronos.org/OpenGL-Refpages/gl4/)
 * [Learn OpenGL](https://learnopengl-cn.github.io/)
 * [一看就懂的OpenGL ES教程——图形渲染管线的那些事](https://juejin.cn/post/7119135465302654984)
