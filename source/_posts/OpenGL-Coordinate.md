@@ -7,3 +7,15 @@ tags:
 categories:
     - OpenGL
 ---
+
+坐标系统
+
+OpenGL右手坐标系
+
+
+MVP
+
+投影矩阵
+
+正交投影
+透视投影

@@ -28,8 +28,8 @@ OpenGL的概念，相信大家都听说过，应用场景非常广泛，音视�
 13. [OpenGLES 3.0 - 3D模型加载和渲染](/2023/11/12/OpenGL-3DModelLoad/)
 
 # 源码分析
-1. AudioVideoRecording源码分析
-2. Grafika源码分析
+1. [AudioVideoRecording源码分析](/2023/11/14/OpenGL-AudioVideoRecording/)
+2. [Grafika源码分析](/2023/11/15/OpenGL-Grafika/)
 
 # 参考
 - [全网最全的 Android 音视频和 OpenGL ES 干货](https://mp.weixin.qq.com/s/26BywT1MbM20zybeWD12mw)
@@ -37,3 +37,4 @@ OpenGL的概念，相信大家都听说过，应用场景非常广泛，音视�
 - [OpenGL学习路径](https://cstsinghua.github.io/2018/07/12/openGL%E5%AD%A6%E4%B9%A0%E8%B7%AF%E5%BE%84/)
 - [图形渲染学习路线](https://zhuanlan.zhihu.com/p/553509106)
 - [推荐几个堪称教科书级别的 Android 音视频入门项目](https://glumes.com/android-av-beginner-resource/)
+- [一步步学OpenGL3.3+](https://www.zhihu.com/column/c_1375900139991678976)
