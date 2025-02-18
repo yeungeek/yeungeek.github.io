@@ -25,7 +25,7 @@ OpenGL的概念，相信大家都听说过，应用场景非常广泛，音视�
 10. [OpenGLES 3.0 - 相机预览](/2023/10/28/OpenGL-CameraPreview/)
 11. [OpenGLES 3.0 - 相机基础滤镜](/2023/10/28/OpenGL-CameraFilter/)
 12. [OpenGLES 3.0 - 3D模型](/2023/11/11/OpenGL-3DModel/)
-13. [OpenGLES 3.0 - 3D模型加载和渲染](/2023/11/12/OpenGL-3DModelLoad/)
+13. [OpenGLES 3.0 - 3D模型加载和渲染](/2023/11/12/OpenGL-Load3DModel/)
 
 # 源码分析
 1. [AudioVideoRecording源码分析](/2023/11/14/OpenGL-AudioVideoRecording/)
