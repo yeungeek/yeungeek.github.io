@@ -198,8 +198,8 @@
     <link rel="preload" href="/css/dark.css?v=20211217" as="style">
     <link rel="stylesheet" href="/css/dark.css">
     <link rel="stylesheet" href="/css/mobile.css?v=20211217" media="(max-width: 960px)">
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" as="script">
+    <link rel="preload" href="https://code.bdstatic.com/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="https://code.bdstatic.com/npm/jquery@3.6.0/dist/jquery.min.js" as="script">
     <link rel="preload" href="/scripts/main.js?v=20211217" as="script">
     <link rel="preload" href="/scripts/dark.js?v=20211217" as="script">
     <link rel="preload" href="/font/Oswald-Regular.ttf" as="font" crossorigin>
@@ -224,7 +224,7 @@
 <meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="Yeungeek" type="application/atom+xml">
 </head>
 
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://code.bdstatic.com/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script type="text/javascript">
         if (typeof window.$ == undefined) {
             console.warn('jquery load from jsdelivr failed, will load local script')
@@ -423,7 +423,7 @@
 
   asyncLoadWithFallBack(
     [
-      'https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js',
+      'https://fastly.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js',
       'https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js',
       "/lib/webfontloader.min.js",
     ],
@@ -441,31 +441,346 @@
         
         
             
-            
         
         <article class="index-post">
-            <a class="abstract-title" href="/2020/01/13/AndroidCamera-Series/">
+            <a class="abstract-title" href="/2023/10/10/OpenGL-Coordinate/">
                 
-                    <span class="iconfont-archer stick-top">&#xe63d;</span>
-                
-                <span class="abstract-title-text">Android Camera-系列文章</span>
+                <span class="abstract-title-text">OpenGLES 3.0 - 坐标系统</span>
             </a>
             <div class="abstract-content">
-                <p>最近比较忙，文章也很久没有更新了。<br>最近项目中用到Camera，做了一些功能，发现Camera涉及到很多内容，可以做成一个系列来分析。随着5G时代的到来，音视频相关的内容，会越来越流行，而Camera应该算是最基础的设施了，所以接下来会对Camera这块进行分析，通过下面这些文章，可以对Camera有个更深入的理解。</p>
+                坐标系统
+OpenGL右手坐标系
+MVP
+投影矩阵
+正交投影透视投影
+参考
+坐标系统
+
+
             </div>
             <!-- read more -->
             
             <div class="abstract-post-meta">
                 <!-- date -->
-                <div class="abstract-date" title="Last updated: 2023/09/27">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2020/01/13</span>
+                <div class="abstract-date" title="Last updated: 2025/02/18">
+                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2023/10/10</span>
                 </div>
                 <!-- tags -->
                 
                     <div class= abstract-tags >
     
     
-        <a class="post-tag" href="javascript:void(0);" data-tags="Camera">Camera</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGL">OpenGL</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGLES">OpenGLES</a>
+    
+</div>
+
+                
+            </div>
+        </article>
+        <div class="index-post-divider"></div>
+    
+        
+        
+        
+        
+            
+            
+        
+        <article class="index-post">
+            <a class="abstract-title" href="/2023/10/09/OpenGL-TextureBuffer/">
+                
+                <span class="abstract-title-text">OpenGLES 3.0 - VBO、EBO和VAO</span>
+            </a>
+            <div class="abstract-content">
+                <p>在前面几个章节中，我们使用到了很多概念，没有进行描述，本节针对前面使用到的一些概念，再进行一个普及。已经涉及到的几个概念：VBO、EBO(IBO)、VAO。<br>VBO和EBO是在OpenGL1.5中引入的，主要用于优化顶点数据的存储和索引管理。<br>VAO则是在OpenGL3.0中引入的，用于简化顶点缓冲和属性的管理。<br>VBO和EBO的作用是在显存中申请一块内存，用于缓存数据，降低内存拷贝带来的开销。之前用于绘制的顶点数据会先保存在CPU，每次调用绘制函数的时候，再把顶点数据从CPU拷贝到显存中，这也是一个比较大的开销。</p>
+            </div>
+            <!-- read more -->
+            
+            <div class="abstract-post-meta">
+                <!-- date -->
+                <div class="abstract-date" title="Last updated: 2025/02/18">
+                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2023/10/09</span>
+                </div>
+                <!-- tags -->
+                
+                    <div class= abstract-tags >
+    
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGL">OpenGL</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGLES">OpenGLES</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="Texture">Texture</a>
+    
+</div>
+
+                
+            </div>
+        </article>
+        <div class="index-post-divider"></div>
+    
+        
+        
+        
+        
+            
+            
+        
+        <article class="index-post">
+            <a class="abstract-title" href="/2023/10/08/OpenGL-TextureMap/">
+                
+                <span class="abstract-title-text">OpenGLES 3.0 - 纹理映射</span>
+            </a>
+            <div class="abstract-content">
+                <h1 id="纹理"><a href="#纹理" class="headerlink" title="纹理"></a>纹理</h1><p>纹理是指在计算机图形学中，为了增加物体表面的细节和真实感而使用的一种技术。纹理是一个2D图片，（甚至也有1D和3D的纹理）,可以简单理解为物体表面的图案。<br>在OpenGL ES中，纹理实际上是一个可以被采样的复杂数据集合，是 GPU 的图像数据结构，纹理分为2D纹理、2D纹理数组、3D纹理和立方图纹理。<br>在Android GLES中，主要分为外部GLES纹理(GL_TEXTURE_EXTERNAL_OES)与传统GLES纹理 (GL_TEXTURE_2D)。</p>
+            </div>
+            <!-- read more -->
+            
+            <div class="abstract-post-meta">
+                <!-- date -->
+                <div class="abstract-date" title="Last updated: 2025/02/18">
+                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2023/10/08</span>
+                </div>
+                <!-- tags -->
+                
+                    <div class= abstract-tags >
+    
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGL">OpenGL</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGLES">OpenGLES</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="Texture">Texture</a>
+    
+</div>
+
+                
+            </div>
+        </article>
+        <div class="index-post-divider"></div>
+    
+        
+        
+        
+        
+            
+        
+        <article class="index-post">
+            <a class="abstract-title" href="/2023/09/27/OpenGL-GLSL/">
+                
+                <span class="abstract-title-text">OpenGLES 3.0 - 着色器语言GLSL</span>
+            </a>
+            <div class="abstract-content">
+                简介在OpenGL开发过程中，我们经常会用到着色器语言(GLSL)，它主要用于编写顶点着色器和片段着色器，接下来会详细讲解着色器语言GL Shader Language(GLSL)的一些基本概念。
+版本GLSL最初随着OpenGL2.0版本一同发布，随着OpenGL版本的不断升级。OpenGL版本和GLSL版本对应关系：
+
+
+
+OpenGL版本
+GLSL版本
+发布时间
+
+
+
+2.0
+110
+2004年9月7日
+
+
+2.1
+120
+2006年7月2日
+
+
+3.0
+130
+2008年8月11日
+
+
+3.1
+140
+2009年3月24日
+
+
+3.2
+150
+2009年8月3日
+
+
+3.3
+33...
+            </div>
+            <!-- read more -->
+            
+            <div class="abstract-post-meta">
+                <!-- date -->
+                <div class="abstract-date" title="Last updated: 2025/02/18">
+                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2023/09/27</span>
+                </div>
+                <!-- tags -->
+                
+                    <div class= abstract-tags >
+    
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGL">OpenGL</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGLES">OpenGLES</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="GLSL">GLSL</a>
+    
+</div>
+
+                
+            </div>
+        </article>
+        <div class="index-post-divider"></div>
+    
+        
+        
+        
+        
+            
+            
+        
+        <article class="index-post">
+            <a class="abstract-title" href="/2023/08/02/OpenGL-Intro/">
+                
+                <span class="abstract-title-text">OpenGLES 3.0 - 简介和基础绘制流程</span>
+            </a>
+            <div class="abstract-content">
+                <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><h2 id="OpenGL"><a href="#OpenGL" class="headerlink" title="OpenGL"></a>OpenGL</h2><p><img src="https://s1.ax1x.com/2023/08/13/pPK8x4P.jpg" alt="pPK8x4P.jpg"><br><a target="_blank" rel="noopener" href="https://www.opengl.org/">OpenGL(Open Graphics Library,开放图形库)</a>，是用于渲染2D、3D矢量图形的跨语言、跨平台的应用程序编程接口规范。<br>它本身并不是一个API，它仅仅是一个由Khronos组织制定并维护的规范（Specification）。它的实现由显示设备厂商提供，并且非常依赖该厂商提供的硬件。<br>当你使用Apple系统的时候，OpenGL库是由Apple维护的。在Windows上，OpenGL库可能是Direct3D接口的一个封装(Wrapper)。表面上调用OpenGL接口，实际上是间接调用了Direct3D接口。</p>
+            </div>
+            <!-- read more -->
+            
+            <div class="abstract-post-meta">
+                <!-- date -->
+                <div class="abstract-date" title="Last updated: 2025/02/18">
+                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2023/08/02</span>
+                </div>
+                <!-- tags -->
+                
+                    <div class= abstract-tags >
+    
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGL">OpenGL</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGLES">OpenGLES</a>
+    
+</div>
+
+                
+            </div>
+        </article>
+        <div class="index-post-divider"></div>
+    
+        
+        
+        
+        
+            
+            
+        
+        <article class="index-post">
+            <a class="abstract-title" href="/2023/08/02/OpenGL-Tutorials/">
+                
+                    <span class="iconfont-archer stick-top">&#xe63d;</span>
+                
+                <span class="abstract-title-text">OpenGL教程</span>
+            </a>
+            <div class="abstract-content">
+                <p>OpenGL的概念，相信大家都听说过，应用场景非常广泛，音视频、图形渲染、游戏等等。学习OpenGL是有一定的门槛，期间也看过很多其他OpenGL教程，有些写的是非常不错的，例如<a target="_blank" rel="noopener" href="https://learnopengl.com/">LearnOpenGL</a>，能够系统性的学习OpenGL概念和应用。本系列教程，主要会从Android OpenGL ES入手，系统性的介绍图形学渲染技术，结合音视频进行相关应用，并分析两个教科书级别的项目，更加巩固OpenGL技术。</p>
+            </div>
+            <!-- read more -->
+            
+            <div class="abstract-post-meta">
+                <!-- date -->
+                <div class="abstract-date" title="Last updated: 2025/02/18">
+                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2023/08/02</span>
+                </div>
+                <!-- tags -->
+                
+                    <div class= abstract-tags >
+    
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGL">OpenGL</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGLES">OpenGLES</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="Video">Video</a>
+    
+</div>
+
+                
+            </div>
+        </article>
+        <div class="index-post-divider"></div>
+    
+        
+        
+        
+        
+            
+            
+        
+        <article class="index-post">
+            <a class="abstract-title" href="/2020/05/09/Android-Knowledge-System/">
+                
+                    <span class="iconfont-archer stick-top">&#xe63d;</span>
+                
+                <span class="abstract-title-text">Android知识体系</span>
+            </a>
+            <div class="abstract-content">
+                <p>建立一套比较完整的 Android 知识体系，对Android开发或者面试都有裨益，以及后面对某个垂直领域的深入，或者成为该领域的技术专家，甚至是架构师，也有一定的路线指导作用。<br>夯实基础是重中之重，深入某个垂直领域，都是根据当前的业务需求，一步步深入，从而成为该领域专家。<br>下面列表的内容，都是经过实例验证，做到真正掌握才会写到自己的博客里。比较完整的提纲是在最后的思维导图中，提纲中的内容，如果经过了自己验证，就会更新到博客里(持续更新)。 </p>
+            </div>
+            <!-- read more -->
+            
+            <div class="abstract-post-meta">
+                <!-- date -->
+                <div class="abstract-date" title="Last updated: 2025/02/18">
+                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2020/05/09</span>
+                </div>
+                <!-- tags -->
+                
+                    <div class= abstract-tags >
+    
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="Android">Android</a>
+    
+</div>
+
+                
+            </div>
+        </article>
+        <div class="index-post-divider"></div>
+    
+        
+        
+        
+        
+            
+            
+        
+        <article class="index-post">
+            <a class="abstract-title" href="/2020/02/28/AndroidCamera-CameraXSource/">
+                
+                <span class="abstract-title-text">Android Camera-CameraX源码分析</span>
+            </a>
+            <div class="abstract-content">
+                <p>在前面一篇文章中，已经介绍了如何使用 CameraX，这篇文章就分析下 CameraX 主要流程的源码。</p>
+            </div>
+            <!-- read more -->
+            
+            <div class="abstract-post-meta">
+                <!-- date -->
+                <div class="abstract-date" title="Last updated: 2025/02/18">
+                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2020/02/28</span>
+                </div>
+                <!-- tags -->
+                
+                    <div class= abstract-tags >
+    
     
         <a class="post-tag" href="javascript:void(0);" data-tags="Camera2">Camera2</a>
     
@@ -486,28 +801,34 @@
             
         
         <article class="index-post">
-            <a class="abstract-title" href="/2019/08/21/AndroidNDK-DeepUnderstandJNI/">
+            <a class="abstract-title" href="/2020/01/29/AndroidCamera-CameraViewAnalysis/">
                 
-                <span class="abstract-title-text">Android NDK-深入理解JNI</span>
+                <span class="abstract-title-text">Android Camera-CameraView源码分析</span>
             </a>
             <div class="abstract-content">
-                <p>Java调用C&#x2F;C++在Java语言里面本来就有的，并非Android独有的，即JNI。JNI就是Java调用C++的规范。</p>
+                <p>在前面文章中已经介绍了如何使用 <a target="_blank" rel="noopener" href="https://github.com/google/cameraview">CameraView</a>，这是 Google 官方提供的库，并有相关 demo，因为 Android 的碎片化太严重，官方也是考虑到这些，才提供了<a target="_blank" rel="noopener" href="https://github.com/google/cameraview">CameraView</a>供大家学习和参考。     </p>
             </div>
             <!-- read more -->
             
             <div class="abstract-post-meta">
                 <!-- date -->
-                <div class="abstract-date" title="Last updated: 2023/09/27">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2019/08/21</span>
+                <div class="abstract-date" title="Last updated: 2025/02/18">
+                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2020/01/29</span>
                 </div>
                 <!-- tags -->
                 
                     <div class= abstract-tags >
     
     
-        <a class="post-tag" href="javascript:void(0);" data-tags="JNI">JNI</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags="Camera">Camera</a>
     
-        <a class="post-tag" href="javascript:void(0);" data-tags="NDK">NDK</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags="Camera2">Camera2</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="SurfaceView">SurfaceView</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="TextureView">TextureView</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="CameraView">CameraView</a>
     
 </div>
 
@@ -524,338 +845,30 @@
             
         
         <article class="index-post">
-            <a class="abstract-title" href="/2019/07/25/Network-Retrofit/">
+            <a class="abstract-title" href="/2020/01/24/AndroidCamera-Orientation/">
                 
-                <span class="abstract-title-text">Android网络编程-Retrofit源码角度分析Http</span>
+                <span class="abstract-title-text">Android Camera-相机尺寸、方向和图像数据</span>
             </a>
             <div class="abstract-content">
-                <p>上一篇讲解了OKHttp，本篇来介绍下它的黄金搭档Retrofit，OKHttp+Retrofit是网络框架的不二之选。同是Square出品，和OKHttp融合起来非常简单。<br>Retofit是一个RESTful的HTTP网络请求框架，有以下特点：</p>
-<ul>
-<li>基于OKHttp</li>
-<li>通过注解配置网络请求参数</li>
-<li>支持同步、异步请求</li>
-<li>支持多种序列化、反序列化格式</li>
-<li>解耦彻底、模块高度封装，使用很多设计模式来实现
+                <p>前面几篇文章介绍了Camera1，Camera2，CameraView和CameraX的使用，对各个API的使用，应该问题不大，不过在真正开发过程中，也会遇到各种不同的问题，本篇文章继续介绍相机开发过程中遇到的问题，主要是相机预览、拍照尺寸，方向，以及图像数据的处理。</p>
             </div>
             <!-- read more -->
             
             <div class="abstract-post-meta">
                 <!-- date -->
-                <div class="abstract-date" title="Last updated: 2023/09/27">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2019/07/25</span>
+                <div class="abstract-date" title="Last updated: 2025/02/18">
+                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2020/01/24</span>
                 </div>
                 <!-- tags -->
                 
                     <div class= abstract-tags >
     
     
-        <a class="post-tag" href="javascript:void(0);" data-tags="Android">Android</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags="Camera">Camera</a>
     
-        <a class="post-tag" href="javascript:void(0);" data-tags="Network">Network</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags="Camera2">Camera2</a>
     
-        <a class="post-tag" href="javascript:void(0);" data-tags="Http">Http</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Retrofit">Retrofit</a>
-    
-</div>
-
-                
-            </div>
-        </article>
-        <div class="index-post-divider"></div>
-    
-        
-        
-        
-        
-            
-            
-        
-        <article class="index-post">
-            <a class="abstract-title" href="/2019/07/17/Network-OKHttp/">
-                
-                <span class="abstract-title-text">Android网络编程-OKHttp源码角度分析Http</span>
-            </a>
-            <div class="abstract-content">
-                <p>前面介绍了网络的基础知识，这篇主要从<code>OKHttp</code>源码角度来分析Http。<br><a target="_blank" rel="noopener" href="https://github.com/square/okhttp/">OKHttp</a>是一个优秀的网络请求框架，有以下特点：</p>
-<ul>
-<li>支持HTTP2&#x2F;SPDY</li>
-<li>Socket自动选择最好路线，并支持自动重连</li>
-<li>拥有自动维护的Socket连接池，减少握手次数</li>
-<li>拥有队列线程池，轻松写并发</li>
-<li>拥有Interceptors轻松处理请求与响应（比如透明GZIP压缩）</li>
-<li>实现基于Headers的缓存策略</li>
-</ul>
-            </div>
-            <!-- read more -->
-            
-            <div class="abstract-post-meta">
-                <!-- date -->
-                <div class="abstract-date" title="Last updated: 2023/09/27">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2019/07/17</span>
-                </div>
-                <!-- tags -->
-                
-                    <div class= abstract-tags >
-    
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Android">Android</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Network">Network</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Http">Http</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="OKHttp">OKHttp</a>
-    
-</div>
-
-                
-            </div>
-        </article>
-        <div class="index-post-divider"></div>
-    
-        
-        
-        
-        
-            
-            
-        
-        <article class="index-post">
-            <a class="abstract-title" href="/2019/07/15/Network-Cookie-Session-Token/">
-                
-                <span class="abstract-title-text">Android网络编程-Cookie，Session，Token</span>
-            </a>
-            <div class="abstract-content">
-                <p>HTTP协议是无状态的，每次HTTP请求响应后，就会断开这次连接。如果客户端再次发送请求，服务端也不能识别出这个客户端是不是上次请求过的客户端，HTTP协议不能进行会话跟踪。而Cookie，Session，Token正是为了解决HTTP协议无状态问题。</p>
-            </div>
-            <!-- read more -->
-            
-            <div class="abstract-post-meta">
-                <!-- date -->
-                <div class="abstract-date" title="Last updated: 2023/09/27">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2019/07/15</span>
-                </div>
-                <!-- tags -->
-                
-                    <div class= abstract-tags >
-    
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Network">Network</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Session">Session</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Cookie">Cookie</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Token">Token</a>
-    
-</div>
-
-                
-            </div>
-        </article>
-        <div class="index-post-divider"></div>
-    
-        
-        
-        
-        
-            
-            
-        
-        <article class="index-post">
-            <a class="abstract-title" href="/2019/07/12/Network-Http/">
-                
-                <span class="abstract-title-text">Android网络编程-HTTP/HTTPS</span>
-            </a>
-            <div class="abstract-content">
-                <p>HTTP协议是Hyper Text Transfer Protocol（超文本传输协议）的缩写,在TCP&#x2F;IP体系中属于最高层(应用层)是用于从万维网服务器传输超文本到本地浏览器的传送协议。<br>HTTP协议工作于客户端-服务端架构为上。浏览器作为HTTP客户端通过URL向HTTP服务端即WEB服务器发送所有请求。Web服务器根据接收到的请求后，向客户端发送响应信息。
-            </div>
-            <!-- read more -->
-            
-            <div class="abstract-post-meta">
-                <!-- date -->
-                <div class="abstract-date" title="Last updated: 2023/09/27">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2019/07/12</span>
-                </div>
-                <!-- tags -->
-                
-                    <div class= abstract-tags >
-    
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Android">Android</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Network">Network</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Http">Http</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Https">Https</a>
-    
-</div>
-
-                
-            </div>
-        </article>
-        <div class="index-post-divider"></div>
-    
-        
-        
-        
-        
-            
-            
-        
-        <article class="index-post">
-            <a class="abstract-title" href="/2019/06/26/Network-Socket/">
-                
-                <span class="abstract-title-text">Android网络编程-Socket</span>
-            </a>
-            <div class="abstract-content">
-                <p>Socket在Android网络编程中，有着非常重要的作用。</p>
-<h1 id="Socket基本概念"><a href="#Socket基本概念" class="headerlink" title="Socket基本概念"></a>Socket基本概念</h1><p>即套接字，是应用层 与 TCP&#x2F;IP 协议族通信的中间软件抽象层，表现为一个封装了 TCP &#x2F; IP协议族 的编程接口（API）。<br>从设计模式的角度看来，Socket其实就是一个门面模式，它把复杂的TCP&#x2F;IP协议族隐藏在Socket接口后面，对用户来说，一组简单的接口就是全部，让Socket去组织数据，以符合指定的协议。</p>
-            </div>
-            <!-- read more -->
-            
-            <div class="abstract-post-meta">
-                <!-- date -->
-                <div class="abstract-date" title="Last updated: 2023/09/27">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2019/06/26</span>
-                </div>
-                <!-- tags -->
-                
-                    <div class= abstract-tags >
-    
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Android">Android</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Network">Network</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Socket">Socket</a>
-    
-</div>
-
-                
-            </div>
-        </article>
-        <div class="index-post-divider"></div>
-    
-        
-        
-        
-        
-            
-            
-        
-        <article class="index-post">
-            <a class="abstract-title" href="/2019/06/21/Network-TCP-IP/">
-                
-                <span class="abstract-title-text">Android网络编程-TCP/IP协议</span>
-            </a>
-            <div class="abstract-content">
-                <p>在<a href="/2019/06/14/Network-Basic/">Android网络编程-计算机网络基础</a>一文中得知，IP协议属于网络层，TCP、UDP协议属于传输层。<br>IP协议是TCP&#x2F;IP协议族的动力，它为上层协议提供无状态、无连接、不可靠的服务。<br>TCP协议是面向连接的传输层协议，提供一种面向连接的、可靠的字节流服务。<br>UDP协议是面向无连接的传输层协议，提供面向事务的简单不可靠信息传输服务。</p>
-            </div>
-            <!-- read more -->
-            
-            <div class="abstract-post-meta">
-                <!-- date -->
-                <div class="abstract-date" title="Last updated: 2023/09/27">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2019/06/21</span>
-                </div>
-                <!-- tags -->
-                
-                    <div class= abstract-tags >
-    
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Network">Network</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="TCP">TCP</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="UDP">UDP</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="IP">IP</a>
-    
-</div>
-
-                
-            </div>
-        </article>
-        <div class="index-post-divider"></div>
-    
-        
-        
-        
-        
-            
-            
-        
-        <article class="index-post">
-            <a class="abstract-title" href="/2019/06/14/Network-Basic/">
-                
-                <span class="abstract-title-text">Android网络编程-计算机网络基础</span>
-            </a>
-            <div class="abstract-content">
-                <p>从本篇开始，真正进入我们的Android网络编程学习之旅。</p>
-<h1 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h1><p>计算机网络是利用通信设备和线路将地理位置不同的、功能独立的多个计算机系统连接起来，以功能完善的网络软件实现网络的硬件、软件及资源共享和信息传递的系统。简单的说即连接两台或多台计算机进行通信的系统。</p>
-            </div>
-            <!-- read more -->
-            
-            <div class="abstract-post-meta">
-                <!-- date -->
-                <div class="abstract-date" title="Last updated: 2023/09/27">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2019/06/14</span>
-                </div>
-                <!-- tags -->
-                
-                    <div class= abstract-tags >
-    
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Network">Network</a>
-    
-</div>
-
-                
-            </div>
-        </article>
-        <div class="index-post-divider"></div>
-    
-        
-        
-        
-        
-            
-            
-        
-        <article class="index-post">
-            <a class="abstract-title" href="/2019/06/13/Network-Series/">
-                
-                    <span class="iconfont-archer stick-top">&#xe63d;</span>
-                
-                <span class="abstract-title-text">Android网络编程-系列文章</span>
-            </a>
-            <div class="abstract-content">
-                <p>在Android开发过程中，网络编程是必不可少的。<br>大家接触的<code>Volley</code>,<code>Retrofit</code>,<code>OKHttp</code>等网络框架，很好地封装了底层实现的细节，在使用过程中非常的方便。但是掌握其中的细节，对我们来说真的非常重要，只有掌握了网络编程的原理，才能真正理解这些网络框架的源码实现。</p>
-            </div>
-            <!-- read more -->
-            
-            <div class="abstract-post-meta">
-                <!-- date -->
-                <div class="abstract-date" title="Last updated: 2023/09/27">
-                    <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2019/06/13</span>
-                </div>
-                <!-- tags -->
-                
-                    <div class= abstract-tags >
-    
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Android">Android</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Network">Network</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Http">Http</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="OKHttp">OKHttp</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags="Retrofit">Retrofit</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags="Orientation">Orientation</a>
     
 </div>
 
@@ -867,7 +880,7 @@
     <!-- paginator  -->
     
         <nav class="page-nav">
-            <a class="extend prev" rel="prev" href="/archives/">&lt; PREV</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span>
+            <a class="extend prev" rel="prev" href="/archives/">&lt; PREV</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span><a class="page-number" href="/archives/page/3/">3</a><a class="page-number" href="/archives/page/4/">4</a><a class="extend next" rel="next" href="/archives/page/3/">NEXT &gt;</a>
         </nav>
     
 </main>
@@ -1091,7 +1104,215 @@
         
         
         
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         
         
@@ -1224,7 +1445,7 @@
     
     <div class="total-and-search">
         <div class="total-archive">
-        Total : 20
+        Total : 34
         </div>
         <!-- search  -->
         
@@ -1238,6 +1459,90 @@
             <div class="archive-year"> 2023 </div>
             <ul class="year-list">
             
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/15</span>
+            <a class="archive-post-title" href="/2023/11/15/OpenGL-Grafika/">OpenGLES 3.0 - Grafika源码分析</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/14</span>
+            <a class="archive-post-title" href="/2023/11/14/OpenGL-AudioVideoRecording/">OpenGLES 3.0 - AudioVideoRecording源码分析</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/12</span>
+            <a class="archive-post-title" href="/2023/11/12/OpenGL-Load3DModel/">OpenGLES 3.0 - 3D模型加载和渲染</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/11</span>
+            <a class="archive-post-title" href="/2023/11/11/OpenGL-3DModel/">OpenGLES 3.0 - 3D模型</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/28</span>
+            <a class="archive-post-title" href="/2023/10/28/OpenGL-CameraFilter/">OpenGLES 3.0 - 相机基础滤镜</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/28</span>
+            <a class="archive-post-title" href="/2023/10/28/OpenGL-CameraPreview/">OpenGLES 3.0 - 相机预览</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/27</span>
+            <a class="archive-post-title" href="/2023/10/27/OpenGL-UBO-TBO/">OpenGLES 3.0 - UBO和TBO</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/23</span>
+            <a class="archive-post-title" href="/2023/10/23/OpenGL-PBO/">OpenGLES 3.0 - PBO</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/18</span>
+            <a class="archive-post-title" href="/2023/10/18/OpenGL-FBO/">OpenGLES 3.0 - FBO离屏渲染</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/17</span>
+            <a class="archive-post-title" href="/2023/10/17/OpenGL-EGL/">OpenGLES 3.0 - EGL详解</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/10</span>
+            <a class="archive-post-title" href="/2023/10/10/OpenGL-Coordinate/">OpenGLES 3.0 - 坐标系统</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/09</span>
+            <a class="archive-post-title" href="/2023/10/09/OpenGL-TextureBuffer/">OpenGLES 3.0 - VBO、EBO和VAO</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/08</span>
+            <a class="archive-post-title" href="/2023/10/08/OpenGL-TextureMap/">OpenGLES 3.0 - 纹理映射</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/27</span>
+            <a class="archive-post-title" href="/2023/09/27/OpenGL-GLSL/">OpenGLES 3.0 - 着色器语言GLSL</a>
+        </li>
+    
         
         <li class="archive-post-item">
             <span class="archive-post-date">08/02</span>
@@ -1382,11 +1687,6 @@
         <div class="sidebar-panel-tags">
     <div class="sidebar-tags-name">
         
-            <span class="sidebar-tag-name" data-tags="Android">
-                <span class="iconfont-archer">&#xe606;</span>
-                Android
-            </span>
-        
             <span class="sidebar-tag-name" data-tags="Camera">
                 <span class="iconfont-archer">&#xe606;</span>
                 Camera
@@ -1400,6 +1700,11 @@
             <span class="sidebar-tag-name" data-tags="CameraX">
                 <span class="iconfont-archer">&#xe606;</span>
                 CameraX
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Android">
+                <span class="iconfont-archer">&#xe606;</span>
+                Android
             </span>
         
             <span class="sidebar-tag-name" data-tags="SurfaceView">
@@ -1497,6 +1802,11 @@
                 OpenGL
             </span>
         
+            <span class="sidebar-tag-name" data-tags="3D">
+                <span class="iconfont-archer">&#xe606;</span>
+                3D
+            </span>
+        
             <span class="sidebar-tag-name" data-tags="OpenGLES">
                 <span class="iconfont-archer">&#xe606;</span>
                 OpenGLES
@@ -1505,6 +1815,16 @@
             <span class="sidebar-tag-name" data-tags="Video">
                 <span class="iconfont-archer">&#xe606;</span>
                 Video
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="GLSL">
+                <span class="iconfont-archer">&#xe606;</span>
+                GLSL
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Texture">
+                <span class="iconfont-archer">&#xe606;</span>
+                Texture
             </span>
         
     </div>
@@ -1518,14 +1838,14 @@
         <div class="sidebar-panel-categories">
     <div class="sidebar-categories-name">
     
-        <span class="sidebar-category-name" data-categories="Android框架层">
-            <span class="iconfont-archer">&#xe60a;</span>
-            Android框架层
-        </span>
-    
         <span class="sidebar-category-name" data-categories="Camera">
             <span class="iconfont-archer">&#xe60a;</span>
             Camera
+        </span>
+    
+        <span class="sidebar-category-name" data-categories="Android框架层">
+            <span class="iconfont-archer">&#xe60a;</span>
+            Android框架层
         </span>
     
         <span class="sidebar-category-name" data-categories="Android应用层">
@@ -1568,12 +1888,12 @@
         <!-- dark mode -->
         <script src="/scripts/dark.js?v=20211217"></script>
         <!-- fancybox -->
-        <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" defer></script>
+        <script src="https://code.bdstatic.com/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" defer></script>
         <!-- algolia -->
         
         <!-- busuanzi -->
         
-            <script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+            <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
         
         <!-- CNZZ -->
         

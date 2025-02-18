@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <!-- title -->
+
+
+    
+
+<!-- keywords -->
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="author" content="Yeungeek">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Yeungeek">
+    
+        <meta name="keywords" content="hexo,hexo-theme,hexo-blog,Android,yeungeek,Unity">
+    
+    <meta name="description" content="It's my Androad">
+    <meta name="description" content="简介在OpenGL开发过程中，我们经常会用到着色器语言(GLSL)，它主要用于编写顶点着色器和片段着色器，接下来会详细讲解着色器语言GL Shader Language(GLSL)的一些基本概念。 版本GLSL最初随着OpenGL2.0版本一同发布，随着OpenGL版本的不断升级。OpenGL版本和GLSL版本对应关系：    OpenGL版本 GLSL版本 发布时间    2.0 110 200">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenGLES 3.0 - 着色器语言GLSL">
+<meta property="og:url" content="http://yeungeek.github.io/2023/09/27/OpenGL-GLSL/index.html">
+<meta property="og:site_name" content="Yeungeek">
+<meta property="og:description" content="简介在OpenGL开发过程中，我们经常会用到着色器语言(GLSL)，它主要用于编写顶点着色器和片段着色器，接下来会详细讲解着色器语言GL Shader Language(GLSL)的一些基本概念。 版本GLSL最初随着OpenGL2.0版本一同发布，随着OpenGL版本的不断升级。OpenGL版本和GLSL版本对应关系：    OpenGL版本 GLSL版本 发布时间    2.0 110 200">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yeungeek.github.io/2023/09/27/OpenGL-GLSL/s_1.png">
+<meta property="og:image" content="http://yeungeek.github.io/2023/09/27/OpenGL-GLSL/s_2.png">
+<meta property="article:published_time" content="2023-09-27T20:06:30.000Z">
+<meta property="article:modified_time" content="2025-02-18T02:37:18.916Z">
+<meta property="article:author" content="Yeungeek">
+<meta property="article:tag" content="OpenGL">
+<meta property="article:tag" content="OpenGLES">
+<meta property="article:tag" content="GLSL">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yeungeek.github.io/2023/09/27/OpenGL-GLSL/s_1.png">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="icon" href="/assets/favicon.ico">
+    
+    <title>OpenGLES 3.0 - 着色器语言GLSL · 技术沉思录</title>
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+    (function (w) {
+        'use strict'
+        // rel=preload support test
+        if (!w.loadCSS) {
+            w.loadCSS = function () {}
+        }
+        // define on the loadCSS obj
+        var rp = (loadCSS.relpreload = {})
+        // rel=preload feature support test
+        // runs once and returns a function for compat purposes
+        rp.support = (function () {
+            var ret
+            try {
+                ret = w.document.createElement('link').relList.supports('preload')
+            } catch (e) {
+                ret = false
+            }
+            return function () {
+                return ret
+            }
+        })()
+
+        // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+        // then change that media back to its intended value on load
+        rp.bindMediaToggle = function (link) {
+            // remember existing media attr for ultimate state, or default to 'all'
+            var finalMedia = link.media || 'all'
+
+            function enableStylesheet() {
+                link.media = finalMedia
+            }
+
+            // bind load handlers to enable media
+            if (link.addEventListener) {
+                link.addEventListener('load', enableStylesheet)
+            } else if (link.attachEvent) {
+                link.attachEvent('onload', enableStylesheet)
+            }
+
+            // Set rel and non-applicable media type to start an async request
+            // note: timeout allows this to happen async to let rendering continue in IE
+            setTimeout(function () {
+                link.rel = 'stylesheet'
+                link.media = 'only x'
+            })
+            // also enable media after 3 seconds,
+            // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+            setTimeout(enableStylesheet, 3000)
+        }
+
+        // loop through link elements in DOM
+        rp.poly = function () {
+            // double check this to prevent external calls from running
+            if (rp.support()) {
+                return
+            }
+            var links = w.document.getElementsByTagName('link')
+            for (var i = 0; i < links.length; i++) {
+                var link = links[i]
+                // qualify links to those with rel=preload and as=style attrs
+                if (
+                    link.rel === 'preload' &&
+                    link.getAttribute('as') === 'style' &&
+                    !link.getAttribute('data-loadcss')
+                ) {
+                    // prevent rerunning on link
+                    link.setAttribute('data-loadcss', true)
+                    // bind listeners to toggle media back
+                    rp.bindMediaToggle(link)
+                }
+            }
+        }
+
+        // if unsupported, run the polyfill
+        if (!rp.support()) {
+            // run once at least
+            rp.poly()
+
+            // rerun poly on an interval until onload
+            var run = w.setInterval(rp.poly, 500)
+            if (w.addEventListener) {
+                w.addEventListener('load', function () {
+                    rp.poly()
+                    w.clearInterval(run)
+                })
+            } else if (w.attachEvent) {
+                w.attachEvent('onload', function () {
+                    rp.poly()
+                    w.clearInterval(run)
+                })
+            }
+        }
+
+        // commonjs
+        if (typeof exports !== 'undefined') {
+            exports.loadCSS = loadCSS
+        } else {
+            w.loadCSS = loadCSS
+        }
+    })(typeof global !== 'undefined' ? global : this)
+</script>
+
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+</style>
+
+    <link rel="preload" href="/css/style.css?v=20211217" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/css/dark.css?v=20211217" as="style">
+    <link rel="stylesheet" href="/css/dark.css">
+    <link rel="stylesheet" href="/css/mobile.css?v=20211217" media="(max-width: 960px)">
+    <link rel="preload" href="https://code.bdstatic.com/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="https://code.bdstatic.com/npm/jquery@3.6.0/dist/jquery.min.js" as="script">
+    <link rel="preload" href="/scripts/main.js?v=20211217" as="script">
+    <link rel="preload" href="/scripts/dark.js?v=20211217" as="script">
+    <link rel="preload" href="/font/Oswald-Regular.ttf" as="font" crossorigin>
+    <link rel="preload" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" as="font" crossorigin>
+    <!-- algolia -->
+    
+    <!-- 百度统计  -->
+    
+        <script>
+            var _hmt = _hmt || [];
+            (function () {
+                var hm = document.createElement("script");
+                hm.src = "https://hm.baidu.com/hm.js?75ae37defe17129870bc1ba88b527367";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+            })();
+        </script>
+    
+    <!-- Google tag (gtag.js) -->
+    
+
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="Yeungeek" type="application/atom+xml">
+</head>
+
+    <script src="https://code.bdstatic.com/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ == undefined) {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js" />')
+        }
+    </script>
+    
+        <body class="post-body">
+    
+        <!-- header -->
+        <header class="header header-mobile">
+    <!-- top read progress line -->
+    <div class="header-element">
+        <div class="read-progress"></div>
+    </div>
+    <!-- sidebar menu button -->
+    <div class="header-element">
+        
+            <div class="header-sidebar-menu">
+        
+            
+                <div style="padding-left: 1px;">&#xe775;</div>
+            
+        </div>
+    </div>
+    <!-- header actions -->
+    <div class="header-actions">
+        <!-- theme mode switch button -->
+        <span class="header-theme-btn header-element">
+            <i class="fas fa-adjust"></i>
+        </span>
+        <!-- back to home page text -->
+        <span class="home-link header-element">
+            <a href=/>技术沉思录</a>
+        </span>
+    </div>
+    <!-- toggle banner for post layout -->
+    
+        
+            <div class="banner">
+        
+            <div class="blog-title header-element">
+                <a href="/">技术沉思录</a>
+            </div>
+            <div class="post-title header-element">
+                <a href="#" class="post-name">OpenGLES 3.0 - 着色器语言GLSL</a>
+            </div>
+        </div>
+    
+</header>
+
+        <!-- fixed footer -->
+        <footer class="footer-fixed">
+    <!-- back to top button -->
+    <div class="footer-fixed-element">
+        
+            <div class="back-top back-top-hidden">
+        
+        
+            <div>&#xe639;</div>
+        
+        </div>
+    </div>
+</footer>
+
+        <!-- wrapper -->
+        <div class="wrapper">
+            <div class="site-intro" style="
+
+
+
+
+
+
+
+    height:50vh;
+
+">
+    
+    <!-- 主页  -->
+    
+        
+    <!-- 404页  -->
+    
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(/intro/post-bg.jpg)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+                OpenGLES 3.0 - 着色器语言GLSL
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+                
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页 meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGL">OpenGL</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="OpenGLES">OpenGLES</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags="GLSL">GLSL</a>
+    
+</div>
+
+                
+                <!-- 文章字数统计 -->
+                
+                    <div class="post-intro-read">
+                        <span>字数统计: <span class="post-count word-count">1.9k</span>阅读时长: <span class="post-count reading-time">7 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <!-- 撰写日期 -->
+                    <span class="iconfont-archer post-intro-calander">&#xe676;</span>
+                    <span class="post-intro-time">2023/09/27</span>
+                    <!-- busuanzi -->
+                    
+                        <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                            <span class="iconfont-archer post-intro-busuanzi">&#xe602;</span>
+                            <span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    
+                    <!-- 文章分享 -->
+                    <span class="share-wrapper">
+                        <span class="iconfont-archer share-icon">&#xe71d;</span>
+                        <span class="share-text">Share</span>
+                        <ul class="share-list">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+
+            <script>
+  // get user agent
+  function getBrowserVersions() {
+    var u = window.navigator.userAgent
+    return {
+      userAgent: u,
+      trident: u.indexOf('Trident') > -1, //IE内核
+      presto: u.indexOf('Presto') > -1, //opera内核
+      webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+      gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+      mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+      ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+      android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+      iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+      iPad: u.indexOf('iPad') > -1, //是否为iPad
+      webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+      weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+      uc: u.indexOf('UCBrowser') > -1, //是否为android下的UC浏览器
+    }
+  }
+  var browser = {
+    versions: getBrowserVersions(),
+  }
+  console.log('userAgent: ' + browser.versions.userAgent)
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded')
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document
+        .getElementsByClassName('intro-title')[0]
+        .classList.add('intro-fade-in')
+      document
+        .getElementsByClassName('intro-subtitle')[0]
+        .classList.add('intro-fade-in')
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in')
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb() {
+    if (browser.versions.uc) {
+      console.log('UCBrowser')
+      fontLoaded()
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular'],
+        },
+        loading: function () {
+          // 所有字体开始加载
+          // console.log('font loading');
+        },
+        active: function () {
+          // 所有字体已渲染
+          fontLoaded()
+        },
+        inactive: function () {
+          // 字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout')
+          fontLoaded()
+        },
+        timeout: 5000, // Set the timeout to two seconds
+      })
+    }
+  }
+
+  function asyncErr() {
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document,
+      t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0]
+    o.src = u
+    if (cb) {
+      o.addEventListener(
+        'load',
+        function (e) {
+          cb(null, e)
+        },
+        false
+      )
+    }
+    if (err) {
+      o.addEventListener(
+        'error',
+        function (e) {
+          err(null, e)
+        },
+        false
+      )
+    }
+    s.parentNode.insertBefore(o, s)
+  }
+
+  var asyncLoadWithFallBack = function (arr, success, reject) {
+    var currReject = function () {
+      reject()
+      arr.shift()
+      if (arr.length) async(arr[0], success, currReject)
+    }
+
+    async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack(
+    [
+      'https://fastly.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js',
+      'https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js',
+      "/lib/webfontloader.min.js",
+    ],
+    asyncCb,
+    asyncErr
+  )
+</script>
+
+            <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+            <div class="container container-unloaded">
+                <main class="main post-page">
+    <article class="article-entry">
+        <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>在OpenGL开发过程中，我们经常会用到着色器语言(GLSL)，它主要用于编写顶点着色器和片段着色器，接下来会详细讲解着色器语言GL Shader Language(GLSL)的一些基本概念。</p>
+<h2 id="版本"><a href="#版本" class="headerlink" title="版本"></a>版本</h2><p>GLSL最初随着OpenGL2.0版本一同发布，随着OpenGL版本的不断升级。OpenGL版本和GLSL版本对应关系：</p>
+<table>
+<thead>
+<tr>
+<th align="center">OpenGL版本</th>
+<th align="center">GLSL版本</th>
+<th align="center">发布时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">2.0</td>
+<td align="center">110</td>
+<td align="center">2004年9月7日</td>
+</tr>
+<tr>
+<td align="center">2.1</td>
+<td align="center">120</td>
+<td align="center">2006年7月2日</td>
+</tr>
+<tr>
+<td align="center">3.0</td>
+<td align="center">130</td>
+<td align="center">2008年8月11日</td>
+</tr>
+<tr>
+<td align="center">3.1</td>
+<td align="center">140</td>
+<td align="center">2009年3月24日</td>
+</tr>
+<tr>
+<td align="center">3.2</td>
+<td align="center">150</td>
+<td align="center">2009年8月3日</td>
+</tr>
+<tr>
+<td align="center">3.3</td>
+<td align="center">330</td>
+<td align="center">2010年3月11日</td>
+</tr>
+<tr>
+<td align="center">4.0</td>
+<td align="center">400</td>
+<td align="center">2010年3月11日</td>
+</tr>
+<tr>
+<td align="center">4.1</td>
+<td align="center">410</td>
+<td align="center">2010年7月26日</td>
+</tr>
+<tr>
+<td align="center">4.2</td>
+<td align="center">420</td>
+<td align="center">2011年8月8日</td>
+</tr>
+<tr>
+<td align="center">4.3</td>
+<td align="center">430</td>
+<td align="center">2012年8月6日</td>
+</tr>
+<tr>
+<td align="center">4.4</td>
+<td align="center">440</td>
+<td align="center">2013年7月23日</td>
+</tr>
+<tr>
+<td align="center">4.5</td>
+<td align="center">450</td>
+<td align="center">2014年7月</td>
+</tr>
+<tr>
+<td align="center">4.6</td>
+<td align="center">460</td>
+<td align="center">2017年7月</td>
+</tr>
+</tbody></table>
+<p>同样的，对于嵌入式设备，对于OpenGLES，也有对应的GLSL ES版本，对应关系：</p>
+<table>
+<thead>
+<tr>
+<th align="center">OpenGLES版本</th>
+<th align="center">GLSL ES版本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">2.0</td>
+<td align="center">110</td>
+</tr>
+<tr>
+<td align="center">3.0</td>
+<td align="center">130</td>
+</tr>
+<tr>
+<td align="center">3.1</td>
+<td align="center">140</td>
+</tr>
+<tr>
+<td align="center">3.2</td>
+<td align="center">150</td>
+</tr>
+</tbody></table>
+<p>本文主要讲解的是OpenGL ES3.0版本的GLSL。</p>
+<h1 id="变量类型"><a href="#变量类型" class="headerlink" title="变量类型"></a>变量类型</h1><p>OpenGL ES 着色器语言支持的变量类型：</p>
+<table>
+<thead>
+<tr>
+<th align="center">分类</th>
+<th align="center">变量类型</th>
+<th align="center">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">标量</td>
+<td align="center">float,int,bool,uint</td>
+<td align="center">标量也被称为 “无向量”，</br>其值只有大小，并不具有方向</td>
+</tr>
+<tr>
+<td align="center">浮点向量</td>
+<td align="center">float, vec2, vec3, vec4</td>
+<td align="center">有 1、2、3、4 个分量，</br>基于浮点的向量类型</td>
+</tr>
+<tr>
+<td align="center">正数向量</td>
+<td align="center">int, ivec2, ivec3, ivec4</td>
+<td align="center">有 1、2、3、4 个分量，</br>基于整数的向量类型</td>
+</tr>
+<tr>
+<td align="center">布尔向量</td>
+<td align="center">bool, bvec2, bvec3, bvec4</td>
+<td align="center">有 1、2、3、4 个分量，</br>基于布尔的向量类型</td>
+</tr>
+<tr>
+<td align="center">无符号整数向量</td>
+<td align="center">uint, uvec2, uvec3, uvec4</td>
+<td align="center">有 1、2、3、4 个分量，</br>基于无符号整数的向量类型</td>
+</tr>
+<tr>
+<td align="center">矩阵</td>
+<td align="center">mat2x2,mat2x3,max2x4…</td>
+<td align="center">矩阵是按照列的顺序组织的，</br> 第一个数字表示列数</br>第二个表示行数</td>
+</tr>
+<tr>
+<td align="center">纹理句柄</td>
+<td align="center">sampler2D, samplerCube</td>
+<td align="center">表示2D，立方体纹理的句柄</td>
+</tr>
+<tr>
+<td align="center">空类型</td>
+<td align="center">void</td>
+<td align="center">用于无返回值的函数或空的</br>参数列表</td>
+</tr>
+</tbody></table>
+<h1 id="结构体"><a href="#结构体" class="headerlink" title="结构体"></a>结构体</h1><p>类似C语言中的结构体，使用<code>struct</code>关键字声明结构体。</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">struct foo&#123;</span><br><span class="line">    <span class="type">vec3</span> position;</span><br><span class="line">    <span class="type">float</span> start;</span><br><span class="line">&#125; fooVar;</span><br><span class="line"></span><br><span class="line">fooVar = foo(<span class="type">vec3</span>(<span class="number">1.0</span>,<span class="number">1.0</span>,<span class="number">0.0</span>),<span class="number">0.5</span>);</span><br></pre></td></tr></table></figure>
+<h1 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h1><p>可以声明各种类型的数组。<br>声明数组的方式：</p>
+<ul>
+<li><p>声明数组的同时，指定大小：</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">vec4</span> position[<span class="number">10</span>];</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>声明数组并初始化：</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">float</span> a[] = <span class="type">float</span>[](<span class="number">1.0</span>,<span class="number">2.0</span>f);</span><br><span class="line"><span class="type">float</span> b[] = <span class="type">float</span>[<span class="number">2</span>](<span class="number">1.0</span>,<span class="number">2.0</span>f);</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h1 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h1><p>函数的声明和C语言类似，从<code>main</code>主函数开始执行。<br>注意：函数不能够递归调用，且必须声明返回值类型(无返回值时声明为void)</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">out</span> <span class="type">vec4</span> fragColor;</span><br><span class="line"><span class="type">void</span> main()&#123;</span><br><span class="line">    <span class="type">vec3</span> n;</span><br><span class="line">    <span class="type">vec3</span> l;</span><br><span class="line">    <span class="type">vec4</span> b;</span><br><span class="line">    ...</span><br><span class="line">    fragColor = diffuse(n,l,b);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">vec4</span> diffuse(<span class="type">vec3</span> normal, <span class="type">vec3</span> light, <span class="type">vec4</span> baseColor) &#123;</span><br><span class="line">    <span class="keyword">return</span> baseColor * <span class="built_in">dot</span>(normal, light);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="内置函数"><a href="#内置函数" class="headerlink" title="内置函数"></a>内置函数</h2><p>OpenGL ES 着色语言有许多内置函数，处理各种计算任务。<br>这些内置函数，可分为4种变体：</p>
+<table>
+<thead>
+<tr>
+<th align="center">变体类型</th>
+<th align="center">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">genType</td>
+<td align="center">float,vec2,vec3,vec4</td>
+</tr>
+<tr>
+<td align="center">genIType</td>
+<td align="center">int,ivec2,ivec3,ivec4</td>
+</tr>
+<tr>
+<td align="center">genBType</td>
+<td align="center">uint,uvec2,uvec3,uvec4</td>
+</tr>
+<tr>
+<td align="center">genUType</td>
+<td align="center">uint,uvec2,uvec3,uvec4</td>
+</tr>
+</tbody></table>
+<p>和上文中提到的4种变量对应(float,int,bool,uint)。<br>内置函数都是使用了非常高效的方式来实现，必须熟悉一些常见的内置函数。 </p>
+<h1 id="限定符"><a href="#限定符" class="headerlink" title="限定符"></a>限定符</h1><h2 id="存储限定符"><a href="#存储限定符" class="headerlink" title="存储限定符"></a>存储限定符</h2><p>在GLSL140版本之前，模型的一次渲染过程，顶点着色器中每次运行都会改变的数据称为attribute，每次运行保持不变的数据称为uniform，着色器之间顺序传递的数据称为varying，这些就是所谓的存储限定符。<br><img src="/2023/09/27/OpenGL-GLSL/s_1.png"><br>为了强化渲染管线的输入输出概念，GLSL140版本后，存储限定符attribute和varying不再被推荐使用，取而代之的是in和out。<br><img src="/2023/09/27/OpenGL-GLSL/s_2.png"></p>
+<h3 id="in限定符"><a href="#in限定符" class="headerlink" title="in限定符"></a>in限定符</h3><p>in限定符修饰的全局变量，叫输入变量。<br>顶点着色器的输入变量只能使用in限定符来修饰。片段着色器可以使用in或者centroid in 限定符来修饰全局变量。<br>in限定修饰符和OpenGL ES2.0中的<code>attribute</code>限定符类似。</p>
+<h3 id="out限定符"><a href="#out限定符" class="headerlink" title="out限定符"></a>out限定符</h3><p>out限定符修饰的全局变量，叫输出变量。<br>顶点着色器的输出变量可以使用in或者centroid out限定符来修饰全局变量，用于向渲染管线后继阶段传递当前顶点的数据。<br>片段着色器的输出变量只能使用in限定符来修饰，表示由片段着色器写入计算完成片段颜色值的变量。 </p>
+<h3 id="uniform限定符"><a href="#uniform限定符" class="headerlink" title="uniform限定符"></a>uniform限定符</h3><p>uniform限定符修饰的全局变量，叫统一变量。统一变量的命名空间在顶点着色器和片段着色器中都是共享的。 </p>
+<h3 id="const限定符"><a href="#const限定符" class="headerlink" title="const限定符"></a>const限定符</h3><p>const限定符，可将变量声明为常量，常量只可读，不可修改。常量必须在声明时初始化。例如：</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="type">float</span> PI = <span class="number">3.14159</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="插值限定符"><a href="#插值限定符" class="headerlink" title="插值限定符"></a>插值限定符</h3><p>插值限定符，其主要用于控制顶点着色器传递到片段着色器数据的插值方式。 </p>
+<table>
+<thead>
+<tr>
+<th align="center">插值限定符</th>
+<th align="center">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">smooth</td>
+<td align="center">默认值，平滑着色，顶点着色器的输出变量在图元中线性插值</td>
+</tr>
+<tr>
+<td align="center">flat</td>
+<td align="center">平面着色，将一个顶点视为驱动顶点（取决于图元类型），</br>该顶点的值用于图元中所有片段</td>
+</tr>
+<tr>
+<td align="center">centroid</td>
+<td align="center">质心采样，使用多重采样渲染时，</br>该限定符可用于强制插值发生在被渲染图元内部，否则图元边缘可能出现伪像</td>
+</tr>
+</tbody></table>
+<h3 id="layout限定符"><a href="#layout限定符" class="headerlink" title="layout限定符"></a>layout限定符</h3><p>layout限定符是OpenGL ES3.3中新增的特性，主要用于设置变量的存储索引值。<br>声明的方式：</p>
+<ul>
+<li>作为接口块定义的一部分或者接口块的成员&#x2F;仅仅修饰uniform，用于建立其他一致变量声明的参照</li>
+</ul>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="keyword">layout</span> 限定符&gt; <span class="keyword">uniform</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>用于修饰被接口限定符修饰的单独变量</li>
+</ul>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="keyword">layout</span> 限定符&gt; &lt;接口限定符&gt; &lt;变量声明&gt;</span><br></pre></td></tr></table></figure>
+<p>使用layout为in变量指定存储索引值：</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">layout</span>(<span class="keyword">location</span> = <span class="number">0</span>) <span class="keyword">in</span> <span class="type">vec4</span> vPosition;</span><br><span class="line"><span class="keyword">layout</span>(<span class="keyword">location</span> = <span class="number">1</span>) <span class="keyword">in</span> <span class="type">vec4</span> vTexCoord;</span><br></pre></td></tr></table></figure>
+<p>如果变量是一个数组，则数组的每一个元素都会占据一个location的编号位置，例子中长度为3的数组，会占用5,6,7三个索引位置：</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">layout</span>(<span class="keyword">location</span> = <span class="number">5</span>) <span class="keyword">uniform</span> <span class="type">mat4</span> mMatrix[<span class="number">3</span>];</span><br></pre></td></tr></table></figure>
+<p>对于out变量，layout索引独立于in变量：</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">layout</span>(<span class="keyword">location</span> = <span class="number">0</span>) <span class="keyword">out</span> <span class="type">vec4</span> fragColor;</span><br></pre></td></tr></table></figure>
+
+<h3 id="统一变量块"><a href="#统一变量块" class="headerlink" title="统一变量块"></a>统一变量块</h3><p>统一变量块是OpenGL ES3.3中新增的特性，使用于<code>统一变量缓冲区对象</code>，通过缓冲对象送入渲染管线，以统一变量块的形式批量传送数据比单个传送效率高。基本语法：</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[&lt;<span class="keyword">layout</span> 限定符&gt;] unifrom 一致块名称 &#123;&lt;成员变量列表&gt;&#125; [&lt;实例名&gt;]</span><br></pre></td></tr></table></figure>
+<p>示例：</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#version es 300</span></span><br><span class="line"><span class="keyword">uniform</span> Transform&#123;</span><br><span class="line">	<span class="type">float</span> radius;</span><br><span class="line">	<span class="type">mat4</span> modelViewMatrix;</span><br><span class="line">	<span class="keyword">uniform</span> <span class="type">mat3</span> normalMatrix;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">layout</span>(<span class="keyword">location</span> = <span class="number">0</span>) <span class="keyword">in</span> <span class="type">vec4</span> a_position;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> main() &#123;</span><br><span class="line">    <span class="built_in">gl_Position</span> = modelViewMatrix * a_position;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="精度限定符"><a href="#精度限定符" class="headerlink" title="精度限定符"></a>精度限定符</h3><p>较低的精度效率更高，较高的精度效果更高。<br>精度限定符种类：</p>
+<ul>
+<li>lowp : 低精度</li>
+<li>mediump : 中精度</li>
+<li>highp : 高精度</li>
+</ul>
+<blockquote>
+<p><font color='red'> <strong>注意:</strong></font> </p>
+<ol>
+<li>顶点着色器中，如果没有指定默认精度，则int和float默认精度都是highp</li>
+<li>在片段着色器中，浮点值没有默认精度，必须由开发者声明</li>
+</ol>
+</blockquote>
+<h1 id="内置变量"><a href="#内置变量" class="headerlink" title="内置变量"></a>内置变量</h1><h2 id="顶点着色器中的内置变量"><a href="#顶点着色器中的内置变量" class="headerlink" title="顶点着色器中的内置变量"></a>顶点着色器中的内置变量</h2><h3 id="内置输入变量"><a href="#内置输入变量" class="headerlink" title="内置输入变量"></a>内置输入变量</h3><ul>
+<li>gl_VertexID：顶点整数索引</li>
+<li>gl_InstanceID：实例 ID</li>
+</ul>
+<h3 id="内置输出变量"><a href="#内置输出变量" class="headerlink" title="内置输出变量"></a>内置输出变量</h3><ul>
+<li>gl_Position：顶点位置</li>
+<li>gl_PointSize：点大小</li>
+</ul>
+<h2 id="片段着色器中的内置变量"><a href="#片段着色器中的内置变量" class="headerlink" title="片段着色器中的内置变量"></a>片段着色器中的内置变量</h2><h3 id="内置输入变量-1"><a href="#内置输入变量-1" class="headerlink" title="内置输入变量"></a>内置输入变量</h3><ul>
+<li>gl_FragCoord：片段位置</li>
+<li>gl_FragColor：片段颜色</li>
+<li>gl_FragData：片段颜色缓冲区</li>
+</ul>
+<h3 id="内置输出变量-1"><a href="#内置输出变量-1" class="headerlink" title="内置输出变量"></a>内置输出变量</h3><ul>
+<li>gl_FragDepth：片段深度值</li>
+</ul>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://www.khronos.org/opengl/wiki/OpenGL_Shading_Language">OpenGL Shading Language</a></li>
+<li><a target="_blank" rel="noopener" href="https://bbs.huaweicloud.com/blogs/313360">GLSL的存储限定符和布局限定符</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/mattdesl/lwjgl-basics/wiki/GLSL-Versions">GLSL-Versions</a></li>
+<li><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000037495091">Android OpenGL ES - GLSL基础篇</a></li>
+<li><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000037563032">Android OpenGL ES - GLSL高级篇</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/afei__/article/details/88922112">OpenGL ES 3.0 shader 着色语言基础语法</a></li>
+</ul>
+
+    </article>
+    <!-- license -->
+    
+        <div class="license-wrapper">
+            <p>原文作者：<a href="http://yeungeek.github.io">Yeungeek</a>
+            <p>原文链接：<a href="http://yeungeek.github.io/2023/09/27/OpenGL-GLSL/">http://yeungeek.github.io/2023/09/27/OpenGL-GLSL/</a>
+            <p>发表日期：<a href="http://yeungeek.github.io/2023/09/27/OpenGL-GLSL/">September 27th 2023, 8:06:30 pm</a>
+            <p>更新日期：<a href="http://yeungeek.github.io/2023/09/27/OpenGL-GLSL/">February 18th 2025, 2:37:18 am</a>
+            <p>版权声明：本文采用<a rel="license noopener" target="_blank" href="http://creativecommons.org/licenses/by-nc/4.0/">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可</p>
+        </div>
+    
+    <!-- paginator -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href="/2023/10/08/OpenGL-TextureMap/" title="OpenGLES 3.0 - 纹理映射">
+                    <div class="nextTitle">OpenGLES 3.0 - 纹理映射</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href="/2023/08/02/OpenGL-Intro/" title="OpenGLES 3.0 - 简介和基础绘制流程">
+                    <div class="prevTitle">OpenGLES 3.0 - 简介和基础绘制流程</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- comment -->
+    
+        <div class="post-comment">
+            <!-- 来必力 City 版安装代码 -->
+
+
+            
+
+            
+
+            
+
+            <!-- utteranc评论 -->
+
+
+            <!-- partial('_partial/comment/changyan') -->
+            <!--PC版-->
+
+
+            
+            
+
+            
+
+        </div>
+    
+    <!-- timeliness note -->
+    <!-- idea from: https://hexo.fluid-dev.com/posts/hexo-injector/#%E6%96%87%E7%AB%A0%E6%97%B6%E6%95%88%E6%80%A7%E6%8F%90%E7%A4%BA -->
+    
+    <!-- Mathjax -->
+    
+</main>
+
+                <!-- profile -->
+                
+            </div>
+            <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+        <div class="social">
+            
+    
+        
+            
+                <a href="mailto:yeungeek@gmail.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yeungeek" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                    
+                    <img class="profile-qr" src="/assets/wechat_qr.jpeg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="//weibo.com/springyounger" class="iconfont-archer weibo" target="_blank" title=weibo></a>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="//twitter.com/yeungeek" class="iconfont-archer twitter" target="_blank" title=twitter></a>
+            
+        
+    
+        
+    
+        
+            
+                <a href="//stackoverflow.com/users/943667/yeungeek" class="iconfont-archer stack-overflow" target="_blank" title=stack-overflow></a>
+            
+        
+    
+        
+            
+                <a href="//segmentfault.com/u/yeungeek" class="iconfont-archer segmentFault" target="_blank" title=segmentFault></a>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+
+        </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- website approve for Chinese user -->
+    
+    <!-- 不蒜子  -->
+    
+        <div class="busuanzi-container">
+            
+             
+                <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+            
+        </div>
+    	
+</footer>
+
+        </div>
+        <!-- toc -->
+        
+            <div class="toc-wrapper toc-wrapper-loding" style=
+
+
+
+
+
+
+
+    top:50vh;
+
+>
+                <div class="toc-catalog">
+                    <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+                </div>
+                <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%89%88%E6%9C%AC"><span class="toc-number">1.1.</span> <span class="toc-text">版本</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%98%E9%87%8F%E7%B1%BB%E5%9E%8B"><span class="toc-number">2.</span> <span class="toc-text">变量类型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%BB%93%E6%9E%84%E4%BD%93"><span class="toc-number">3.</span> <span class="toc-text">结构体</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%95%B0%E7%BB%84"><span class="toc-number">4.</span> <span class="toc-text">数组</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%87%BD%E6%95%B0"><span class="toc-number">5.</span> <span class="toc-text">函数</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E7%BD%AE%E5%87%BD%E6%95%B0"><span class="toc-number">5.1.</span> <span class="toc-text">内置函数</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%99%90%E5%AE%9A%E7%AC%A6"><span class="toc-number">6.</span> <span class="toc-text">限定符</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E9%99%90%E5%AE%9A%E7%AC%A6"><span class="toc-number">6.1.</span> <span class="toc-text">存储限定符</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#in%E9%99%90%E5%AE%9A%E7%AC%A6"><span class="toc-number">6.1.1.</span> <span class="toc-text">in限定符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#out%E9%99%90%E5%AE%9A%E7%AC%A6"><span class="toc-number">6.1.2.</span> <span class="toc-text">out限定符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#uniform%E9%99%90%E5%AE%9A%E7%AC%A6"><span class="toc-number">6.1.3.</span> <span class="toc-text">uniform限定符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#const%E9%99%90%E5%AE%9A%E7%AC%A6"><span class="toc-number">6.1.4.</span> <span class="toc-text">const限定符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%92%E5%80%BC%E9%99%90%E5%AE%9A%E7%AC%A6"><span class="toc-number">6.1.5.</span> <span class="toc-text">插值限定符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#layout%E9%99%90%E5%AE%9A%E7%AC%A6"><span class="toc-number">6.1.6.</span> <span class="toc-text">layout限定符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%9F%E4%B8%80%E5%8F%98%E9%87%8F%E5%9D%97"><span class="toc-number">6.1.7.</span> <span class="toc-text">统一变量块</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B2%BE%E5%BA%A6%E9%99%90%E5%AE%9A%E7%AC%A6"><span class="toc-number">6.1.8.</span> <span class="toc-text">精度限定符</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%86%85%E7%BD%AE%E5%8F%98%E9%87%8F"><span class="toc-number">7.</span> <span class="toc-text">内置变量</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A1%B6%E7%82%B9%E7%9D%80%E8%89%B2%E5%99%A8%E4%B8%AD%E7%9A%84%E5%86%85%E7%BD%AE%E5%8F%98%E9%87%8F"><span class="toc-number">7.1.</span> <span class="toc-text">顶点着色器中的内置变量</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E7%BD%AE%E8%BE%93%E5%85%A5%E5%8F%98%E9%87%8F"><span class="toc-number">7.1.1.</span> <span class="toc-text">内置输入变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E7%BD%AE%E8%BE%93%E5%87%BA%E5%8F%98%E9%87%8F"><span class="toc-number">7.1.2.</span> <span class="toc-text">内置输出变量</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%89%87%E6%AE%B5%E7%9D%80%E8%89%B2%E5%99%A8%E4%B8%AD%E7%9A%84%E5%86%85%E7%BD%AE%E5%8F%98%E9%87%8F"><span class="toc-number">7.2.</span> <span class="toc-text">片段着色器中的内置变量</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E7%BD%AE%E8%BE%93%E5%85%A5%E5%8F%98%E9%87%8F-1"><span class="toc-number">7.2.1.</span> <span class="toc-text">内置输入变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E7%BD%AE%E8%BE%93%E5%87%BA%E5%8F%98%E9%87%8F-1"><span class="toc-number">7.2.2.</span> <span class="toc-text">内置输出变量</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-number">8.</span> <span class="toc-text">参考</span></a></li></ol>
+            </div>
+        
+        <!-- sidebar -->
+        <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+        <div class="sidebar-panel-archives">
+    <!-- 在 ejs 中将 archive 按照时间排序 -->
+    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 34
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+        
+            
+            
+            <div class="archive-year"> 2023 </div>
+            <ul class="year-list">
+            
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/15</span>
+            <a class="archive-post-title" href="/2023/11/15/OpenGL-Grafika/">OpenGLES 3.0 - Grafika源码分析</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/14</span>
+            <a class="archive-post-title" href="/2023/11/14/OpenGL-AudioVideoRecording/">OpenGLES 3.0 - AudioVideoRecording源码分析</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/12</span>
+            <a class="archive-post-title" href="/2023/11/12/OpenGL-Load3DModel/">OpenGLES 3.0 - 3D模型加载和渲染</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/11</span>
+            <a class="archive-post-title" href="/2023/11/11/OpenGL-3DModel/">OpenGLES 3.0 - 3D模型</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/28</span>
+            <a class="archive-post-title" href="/2023/10/28/OpenGL-CameraFilter/">OpenGLES 3.0 - 相机基础滤镜</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/28</span>
+            <a class="archive-post-title" href="/2023/10/28/OpenGL-CameraPreview/">OpenGLES 3.0 - 相机预览</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/27</span>
+            <a class="archive-post-title" href="/2023/10/27/OpenGL-UBO-TBO/">OpenGLES 3.0 - UBO和TBO</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/23</span>
+            <a class="archive-post-title" href="/2023/10/23/OpenGL-PBO/">OpenGLES 3.0 - PBO</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/18</span>
+            <a class="archive-post-title" href="/2023/10/18/OpenGL-FBO/">OpenGLES 3.0 - FBO离屏渲染</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/17</span>
+            <a class="archive-post-title" href="/2023/10/17/OpenGL-EGL/">OpenGLES 3.0 - EGL详解</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/10</span>
+            <a class="archive-post-title" href="/2023/10/10/OpenGL-Coordinate/">OpenGLES 3.0 - 坐标系统</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/09</span>
+            <a class="archive-post-title" href="/2023/10/09/OpenGL-TextureBuffer/">OpenGLES 3.0 - VBO、EBO和VAO</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/08</span>
+            <a class="archive-post-title" href="/2023/10/08/OpenGL-TextureMap/">OpenGLES 3.0 - 纹理映射</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/27</span>
+            <a class="archive-post-title" href="/2023/09/27/OpenGL-GLSL/">OpenGLES 3.0 - 着色器语言GLSL</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/02</span>
+            <a class="archive-post-title" href="/2023/08/02/OpenGL-Intro/">OpenGLES 3.0 - 简介和基础绘制流程</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/02</span>
+            <a class="archive-post-title" href="/2023/08/02/OpenGL-Tutorials/">OpenGL教程</a>
+        </li>
+    
+        
+            
+            
+                
+                </ul>
+            
+            <div class="archive-year"> 2020 </div>
+            <ul class="year-list">
+            
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/09</span>
+            <a class="archive-post-title" href="/2020/05/09/Android-Knowledge-System/">Android知识体系</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/28</span>
+            <a class="archive-post-title" href="/2020/02/28/AndroidCamera-CameraXSource/">Android Camera-CameraX源码分析</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/29</span>
+            <a class="archive-post-title" href="/2020/01/29/AndroidCamera-CameraViewAnalysis/">Android Camera-CameraView源码分析</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/24</span>
+            <a class="archive-post-title" href="/2020/01/24/AndroidCamera-Orientation/">Android Camera-相机尺寸、方向和图像数据</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span>
+            <a class="archive-post-title" href="/2020/01/21/AndroidCamera-UsingCameraView/">Android Camera-CameraView和CameraX使用</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/19</span>
+            <a class="archive-post-title" href="/2020/01/19/AndroidCamera-UsingCamera2/">Android Camera-Camera2使用</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/17</span>
+            <a class="archive-post-title" href="/2020/01/17/AndroidCamera-UsingCamera1/">Android Camera-Camera1使用</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/14</span>
+            <a class="archive-post-title" href="/2020/01/14/AndroidCamera-Basic/">Android Camera-基础知识篇</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/13</span>
+            <a class="archive-post-title" href="/2020/01/13/AndroidCamera-Series/">Android Camera-系列文章</a>
+        </li>
+    
+        
+            
+            
+                
+                </ul>
+            
+            <div class="archive-year"> 2019 </div>
+            <ul class="year-list">
+            
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/21</span>
+            <a class="archive-post-title" href="/2019/08/21/AndroidNDK-DeepUnderstandJNI/">Android NDK-深入理解JNI</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/25</span>
+            <a class="archive-post-title" href="/2019/07/25/Network-Retrofit/">Android网络编程-Retrofit源码角度分析Http</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/17</span>
+            <a class="archive-post-title" href="/2019/07/17/Network-OKHttp/">Android网络编程-OKHttp源码角度分析Http</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/15</span>
+            <a class="archive-post-title" href="/2019/07/15/Network-Cookie-Session-Token/">Android网络编程-Cookie，Session，Token</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/12</span>
+            <a class="archive-post-title" href="/2019/07/12/Network-Http/">Android网络编程-HTTP/HTTPS</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/26</span>
+            <a class="archive-post-title" href="/2019/06/26/Network-Socket/">Android网络编程-Socket</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/21</span>
+            <a class="archive-post-title" href="/2019/06/21/Network-TCP-IP/">Android网络编程-TCP/IP协议</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/14</span>
+            <a class="archive-post-title" href="/2019/06/14/Network-Basic/">Android网络编程-计算机网络基础</a>
+        </li>
+    
+        
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span>
+            <a class="archive-post-title" href="/2019/06/13/Network-Series/">Android网络编程-系列文章</a>
+        </li>
+    
+    </div>
+</div>
+
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+        
+            <span class="sidebar-tag-name" data-tags="Camera">
+                <span class="iconfont-archer">&#xe606;</span>
+                Camera
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Camera2">
+                <span class="iconfont-archer">&#xe606;</span>
+                Camera2
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="CameraX">
+                <span class="iconfont-archer">&#xe606;</span>
+                CameraX
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Android">
+                <span class="iconfont-archer">&#xe606;</span>
+                Android
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="SurfaceView">
+                <span class="iconfont-archer">&#xe606;</span>
+                SurfaceView
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="TextureView">
+                <span class="iconfont-archer">&#xe606;</span>
+                TextureView
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="CameraView">
+                <span class="iconfont-archer">&#xe606;</span>
+                CameraView
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Orientation">
+                <span class="iconfont-archer">&#xe606;</span>
+                Orientation
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="JNI">
+                <span class="iconfont-archer">&#xe606;</span>
+                JNI
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="NDK">
+                <span class="iconfont-archer">&#xe606;</span>
+                NDK
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Network">
+                <span class="iconfont-archer">&#xe606;</span>
+                Network
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Session">
+                <span class="iconfont-archer">&#xe606;</span>
+                Session
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Cookie">
+                <span class="iconfont-archer">&#xe606;</span>
+                Cookie
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Token">
+                <span class="iconfont-archer">&#xe606;</span>
+                Token
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Http">
+                <span class="iconfont-archer">&#xe606;</span>
+                Http
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Https">
+                <span class="iconfont-archer">&#xe606;</span>
+                Https
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="OKHttp">
+                <span class="iconfont-archer">&#xe606;</span>
+                OKHttp
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Retrofit">
+                <span class="iconfont-archer">&#xe606;</span>
+                Retrofit
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Socket">
+                <span class="iconfont-archer">&#xe606;</span>
+                Socket
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="TCP">
+                <span class="iconfont-archer">&#xe606;</span>
+                TCP
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="UDP">
+                <span class="iconfont-archer">&#xe606;</span>
+                UDP
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="IP">
+                <span class="iconfont-archer">&#xe606;</span>
+                IP
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="OpenGL">
+                <span class="iconfont-archer">&#xe606;</span>
+                OpenGL
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="3D">
+                <span class="iconfont-archer">&#xe606;</span>
+                3D
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="OpenGLES">
+                <span class="iconfont-archer">&#xe606;</span>
+                OpenGLES
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Video">
+                <span class="iconfont-archer">&#xe606;</span>
+                Video
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="GLSL">
+                <span class="iconfont-archer">&#xe606;</span>
+                GLSL
+            </span>
+        
+            <span class="sidebar-tag-name" data-tags="Texture">
+                <span class="iconfont-archer">&#xe606;</span>
+                Texture
+            </span>
+        
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+        缺失模块，请参考主题文档进行安装配置：https://github.com/fi3ework/hexo-theme-archer#%E5%AE%89%E8%A3%85%E4%B8%BB%E9%A2%98
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="Camera">
+            <span class="iconfont-archer">&#xe60a;</span>
+            Camera
+        </span>
+    
+        <span class="sidebar-category-name" data-categories="Android框架层">
+            <span class="iconfont-archer">&#xe60a;</span>
+            Android框架层
+        </span>
+    
+        <span class="sidebar-category-name" data-categories="Android应用层">
+            <span class="iconfont-archer">&#xe60a;</span>
+            Android应用层
+        </span>
+    
+        <span class="sidebar-category-name" data-categories="OpenGL">
+            <span class="iconfont-archer">&#xe60a;</span>
+            OpenGL
+        </span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+
+    </div>
+</div>
+
+        <!-- site-meta -->
+        <script>
+    var siteMetaRoot = "/"
+    if (siteMetaRoot === "undefined") {
+        siteMetaRoot = '/'
+    }
+    var siteMeta = {
+        url: "http://yeungeek.github.io",
+        root: siteMetaRoot,
+        author: "Yeungeek"
+    }
+</script>
+
+        <!-- import experimental options here -->
+        <!-- Custom Font -->
+
+
+        <!-- main func -->
+        <script src="/scripts/main.js?v=20211217"></script>
+        <!-- dark mode -->
+        <script src="/scripts/dark.js?v=20211217"></script>
+        <!-- fancybox -->
+        <script src="https://code.bdstatic.com/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" defer></script>
+        <!-- algolia -->
+        
+        <!-- busuanzi -->
+        
+            <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script>
+        
+        <!-- CNZZ -->
+        
+        <!-- async load share.js -->
+        
+            <script src="/scripts/share.js?v=20211217" async></script>
+        
+        <!-- mermaid -->
+        
+            <script src='https://code.bdstatic.com/npm/mermaid@8.11.0/dist/mermaid.min.js'></script>
+            <script>
+                if (window.mermaid) {
+                    mermaid.initialize({theme: 'dark'});
+                }
+            </script>
+        
+    </body>
+</html>
